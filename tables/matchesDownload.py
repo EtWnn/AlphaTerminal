@@ -7,6 +7,7 @@ this scripts allows to download matches
 
 @author: etiennew
 """
+import os
 import numpy as np
 from tqdm import tqdm
 import json
@@ -41,12 +42,21 @@ def searchDico(s):
         return []
     return [s[o:c] for o,c in index]
 
+"""
+check if the folder for the raw replays exist, if not create it
+"""
+def checkReplayRepo():
+    try:
+        os.mkdir(tablesManager.REPLAYSPATH)
+    except:
+        pass
 
 """
 Download a selection of matches
 if matches_ids is not specified, every match for the matches table will be downloaded
 """
 def downloadMatchesSelection(matches_ids = None):
+    checkReplayRepo()
     matches_table = tablesManager.getMatchesTable()
     if not(matches_ids):
         matches_ids = list(matches_table.index)
