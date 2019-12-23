@@ -63,7 +63,7 @@ def downloadMatchesSelection(matches_ids = None):
     downloadable = list(matches_table.loc[(matches_table["download_status"]==False) & (matches_table["has_crashed"]==False)].index)
     to_download = np.unique(list(set([match_id for match_id in matches_ids if match_id in downloadable])))
     estimated_download = 1.8 * len(to_download)
-    print("warning! you are about to download {} files (estimated size : {} Mo)".format(len(to_download), estimated_download))
+    print("warning! you are about to download {} files (estimated size : {:.1f} Mo)".format(len(to_download), estimated_download))
     answer = input("do you wish to continue? (yes/no): ")
     if(answer == "yes"):
         for match_id in tqdm(to_download):

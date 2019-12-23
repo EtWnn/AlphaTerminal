@@ -77,6 +77,25 @@ def getMatchId(user_id : int):
         matches_list = matches_list + algos_table.at[algo_id,'matches_list']
     return matches_list
 
+"""
+reset the types of the matches table (sometimes it change fo some dark reasons...)
+"""
+def resetTableType():
+    matches_table = getMatchesTable()
+    dtypes = {'winner_id':int,'loser_id':int,'winner_side':int,'download_status':bool,'has_crashed':bool}
+    matches_table = matches_table.astype(dtypes)
+    setMatchesTable(matches_table)
+    
+    
+    
+"""
+reset the crashed and downloaded boolean on the matches table
+"""
+def resetMatchesBool():
+    matches_table = getMatchesTable()
+    matches_table['download_status'] = False
+    matches_table['has_crashed'] = False
+    setMatchesTable(matches_table)
 
 """
 update the table by scrapping the matches of every encountered algos starting by a list of algos,
