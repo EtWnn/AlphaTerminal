@@ -18,7 +18,7 @@ import terminalAPI
 """
 set the path and folders for the tables and raw replays
 """
-REPLAYSPATH = '/../raw_replays'
+REPLAYSPATH = '../raw_replays'
 USERTABLEPATH = 'users_table.pkl'
 ALGOTABLEPATH = 'algos_table.pkl'
 MATCHETABLEPATH = 'matches_table.pkl'
