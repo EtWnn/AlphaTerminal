@@ -52,25 +52,30 @@ def downloadMatchesSelection(matches_ids = None):
         matches_ids = list(matches_table.index)
     downloadable = list(matches_table.loc[(matches_table["download_status"]==False) & (matches_table["has_crashed"]==False)].index)
     to_download = list(set([match_id for match_id in matches_ids if match_id in downloadable]))
-    for match_id in tqdm(to_download):
-        match_content_b = terminalAPI.getMatchContent(match_id)
-        match_content = str(match_content_b)
-        has_crashed = True
-        try:
-            if match_content_b:
-                frames = [json.loads(c) for c in searchDico(match_content)]
-                if(len(frames)):
-                    has_crashed = frames[-1]['endStats']['player1']['crashed'] or frames[-1]['endStats']['player2']['crashed']
-                    matches_table.at[match_id,'winner_side'] = int(frames[-1]['endStats']['winner'])
-                    if not(has_crashed):
-                        f = open(tablesManager.REPLAYSPATH + '/' + str(match_id) + '.replay','wb')
-                        f.write(match_content_b)
-                        f.close()
-                        matches_table.at[match_id,"download_status"] = True
-        except Exception as e:
+    estimated_download = 1.8 * len(to_download)
+    print("warning! you are about to download {} files (estimated size : {} Mo)".format(len(to_download), estimated_download))
+    answer = input("do you wish to continue? (yes/no): ")
+    if(answer == "yes"):
+        for match_id in tqdm(to_download):
+            match_content_b = terminalAPI.getMatchContent(match_id)
+            match_content = str(match_content_b)
             has_crashed = True
-            print('error for match ' + str(match_id) + ' :', e)
-        if has_crashed:
-            matches_table.at[match_id,"has_crashed"] = True
-        tablesManager.setMatchesTable(matches_table)
-    print("\ndone")
+            try:
+                if match_content_b:
+                    frames = [json.loads(c) for c in searchDico(match_content)]
+                    if(len(frames)):
+                        has_crashed = frames[-1]['endStats']['player1']['crashed'] or frames[-1]['endStats']['player2']['crashed']
+                        matches_table.at[match_id,'winner_side'] = int(frames[-1]['endStats']['winner'])
+                        if not(has_crashed):
+                            f = open(tablesManager.REPLAYSPATH + '/' + str(match_id) + '.replay','wb')
+                            f.write(match_content_b)
+                            f.close()
+                            matches_table.at[match_id,"download_status"] = True
+            except Exception as e:
+                has_crashed = True
+                print('error for match ' + str(match_id) + ' :', e)
+            if has_crashed:
+                matches_table.at[match_id,"has_crashed"] = True
+            tablesManager.setMatchesTable(matches_table)
+        print("\ndone")
+    
