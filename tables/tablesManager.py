@@ -64,6 +64,19 @@ def setMatchesTable(matches_table):
     matches_table.to_pickle(MATCHETABLEPATH)
 
 
+"""
+return the ids of the matches for a user_id
+"""
+def getMatchId(user_id : int):
+    users_table = getUsersTable()
+    algos_table = getAlgosTable()
+    
+    algos_list = users_table.at[user_id,'algos_list']
+    matches_list = []
+    for algo_id in algos_list:
+        matches_list = matches_list + algos_table.at[algo_id,'matches_list']
+    return matches_list
+
 
 """
 update the table by scrapping the matches of every encountered algos starting by a list of algos,
