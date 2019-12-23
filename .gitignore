@@ -1,2 +1,5 @@
 cnn_images/*
 raw_replays/*
+datasets/*
+tables/credentials
+tables/__pycache__
