@@ -7,7 +7,7 @@ this scripts allows to download matches
 
 @author: etiennew
 """
-
+import numpy as np
 from tqdm import tqdm
 import json
 
@@ -51,7 +51,7 @@ def downloadMatchesSelection(matches_ids = None):
     if not(matches_ids):
         matches_ids = list(matches_table.index)
     downloadable = list(matches_table.loc[(matches_table["download_status"]==False) & (matches_table["has_crashed"]==False)].index)
-    to_download = list(set([match_id for match_id in matches_ids if match_id in downloadable]))
+    to_download = np.unique(list(set([match_id for match_id in matches_ids if match_id in downloadable])))
     estimated_download = 1.8 * len(to_download)
     print("warning! you are about to download {} files (estimated size : {} Mo)".format(len(to_download), estimated_download))
     answer = input("do you wish to continue? (yes/no): ")
@@ -78,4 +78,10 @@ def downloadMatchesSelection(matches_ids = None):
                 matches_table.at[match_id,"has_crashed"] = True
             tablesManager.setMatchesTable(matches_table)
         print("\ndone")
-    
+
+"""
+Download only the matches of the user Felix (F.Richter)
+"""
+def downloadEagle():
+    matches_id = list(np.unique(tablesManager.getMatchId("F.Richter") + tablesManager.getMatchId("Felix")))
+    downloadMatchesSelection(matches_id)
