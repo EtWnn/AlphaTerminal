@@ -50,6 +50,22 @@ def checkReplayRepo():
         os.mkdir(tablesManager.REPLAYSPATH)
     except:
         pass
+    
+"""
+update the matches_table according to the exising raw replays file
+"""
+def checkRawDownloaded():
+    files = [f for f in os.listdir(tablesManager.REPLAYSPATH)]
+    matches_table = tablesManager.getMatchesTable()
+    matches_table['download_status'] = False
+    for f in files:
+        try:
+            match_id = int(f.split('.')[0])
+            matches_table.at[match_id,'download_status'] = True
+        except:
+            pass
+    tablesManager.setMatchesTable(matches_table)
+    
 
 """
 Download a selection of matches
@@ -57,6 +73,7 @@ if matches_ids is not specified, every match for the matches table will be downl
 """
 def downloadMatchesSelection(matches_ids = None):
     checkReplayRepo()
+    checkRawDownloaded()
     matches_table = tablesManager.getMatchesTable()
     if not(matches_ids):
         matches_ids = list(matches_table.index)

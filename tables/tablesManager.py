@@ -78,15 +78,13 @@ def getMatchId(user_id : int):
     return matches_list
 
 """
-reset the types of the matches table (sometimes it change fo some dark reasons...)
+reset the types of the matches table (sometimes it changes fo some dark reasons...)
 """
 def resetTableType():
     matches_table = getMatchesTable()
     dtypes = {'winner_id':int,'loser_id':int,'winner_side':int,'download_status':bool,'has_crashed':bool}
     matches_table = matches_table.astype(dtypes)
     setMatchesTable(matches_table)
-    
-    
     
 """
 reset the crashed and downloaded boolean on the matches table
@@ -95,6 +93,7 @@ def resetMatchesBool():
     matches_table = getMatchesTable()
     matches_table['download_status'] = False
     matches_table['has_crashed'] = False
+    matches_table['winner_side'] = -1
     setMatchesTable(matches_table)
 
 """
