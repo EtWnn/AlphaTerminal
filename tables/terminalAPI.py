@@ -9,14 +9,16 @@ Created on Mon Dec 23 13:24:37 2019
 import requests
 import json
 import urllib3
+import pathlib
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 try:
-    with open("credentials") as f:
+    with open(pathlib.Path(__file__).parent / "credentials") as f:
         credentials = json.load(f)
 except FileNotFoundError:
     print("please fill the credentials file and reload this script")
-    with open("credentials",'w') as f:
+    with open(pathlib.Path(__file__).parent / "credentials",'w') as f:
         f.write('{\n\t"username":"",\n\t"password":""\n}\n')
     
 """

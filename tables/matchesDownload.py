@@ -72,8 +72,8 @@ Download a selection of matches
 if matches_ids is not specified, every match for the matches table will be downloaded
 """
 def downloadMatchesSelection(matches_ids = None):
+    print('configuration running, wait please...')
     checkReplayRepo()
-    checkRawDownloaded()
     matches_table = tablesManager.getMatchesTable()
     if not(matches_ids):
         matches_ids = list(matches_table.index)

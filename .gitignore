@@ -3,3 +3,4 @@ raw_replays/*
 datasets/*
 tables/credentials
 tables/__pycache__
+utils/__pycache__

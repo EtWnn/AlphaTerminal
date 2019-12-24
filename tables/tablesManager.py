@@ -8,11 +8,14 @@ this files handles the three tables that are used to store data about terminal u
 @author: etiennew
 """
 
-
 import pandas as pd
 import datetime
+import pathlib
 
-import terminalAPI
+try:
+    from .terminalAPI import getAlgoIdLeaderBoard,getLastMatches
+except ImportError:
+    from terminalAPI import getAlgoIdLeaderBoard,getLastMatches
 
 
 """
@@ -30,7 +33,7 @@ getters for the three tables
 def getUsersTable():
     user_table = None
     try:
-        user_table = pd.read_pickle(USERTABLEPATH)
+        user_table = pd.read_pickle(pathlib.Path(__file__).parent / USERTABLEPATH)
     except FileNotFoundError:
         user_table = pd.DataFrame(columns = ['name','algos_list']).set_index('name')
     return user_table
@@ -38,7 +41,7 @@ def getUsersTable():
 def getAlgosTable():
     algos_table = None
     try:
-        algos_table = pd.read_pickle(ALGOTABLEPATH)
+        algos_table = pd.read_pickle(pathlib.Path(__file__).parent / ALGOTABLEPATH)
     except FileNotFoundError:
         algos_table = pd.DataFrame(columns = ['id','name','user','matches_list']).set_index('id')
     return algos_table
@@ -46,7 +49,7 @@ def getAlgosTable():
 def getMatchesTable():
     matches_table = None
     try:
-        matches_table = pd.read_pickle(MATCHETABLEPATH)
+        matches_table = pd.read_pickle(pathlib.Path(__file__).parent / MATCHETABLEPATH)
     except FileNotFoundError:
         matches_table = pd.DataFrame(columns = ['id','winner_id','loser_id','winner_side','download_status','has_crashed']).set_index('id')
     return matches_table
@@ -55,23 +58,29 @@ def getMatchesTable():
 setters for the three tables
 """
 def setUsersTable(user_table):
-    user_table.to_pickle(USERTABLEPATH)
+    user_table.to_pickle(pathlib.Path(__file__).parent / USERTABLEPATH)
 
 def setAlgosTable(algos_table):
-    algos_table.to_pickle(ALGOTABLEPATH)
+    algos_table.to_pickle(pathlib.Path(__file__).parent / ALGOTABLEPATH)
         
 def setMatchesTable(matches_table):
-    matches_table.to_pickle(MATCHETABLEPATH)
-
+    matches_table.to_pickle(pathlib.Path(__file__).parent / MATCHETABLEPATH)
 
 """
-return the ids of the matches for a user_id
+return the ids of the algos of a user_id
 """
-def getMatchId(user_id : int):
+def getAlgosId(user):
+    users_table = getUsersTable()
+    return users_table.at[user,'algos_list']
+
+"""
+return the ids of the matches of a user
+"""
+def getMatchId(user):
     users_table = getUsersTable()
     algos_table = getAlgosTable()
     
-    algos_list = users_table.at[user_id,'algos_list']
+    algos_list = users_table.at[user,'algos_list']
     matches_list = []
     for algo_id in algos_list:
         matches_list = matches_list + algos_table.at[algo_id,'matches_list']
@@ -93,7 +102,6 @@ def resetMatchesBool():
     matches_table = getMatchesTable()
     matches_table['download_status'] = False
     matches_table['has_crashed'] = False
-    matches_table['winner_side'] = -1
     setMatchesTable(matches_table)
 
 """
@@ -106,7 +114,7 @@ if min_date is specified then max_days_delta is ignored
 def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_days_delta = 10, verbose = 1):
     
     if(starting_ids == None):
-        starting_ids = [algo['id'] for algo in terminalAPI.getAlgoIdLeaderBoard()]
+        starting_ids = [algo['id'] for algo in getAlgoIdLeaderBoard()]
         
     if(min_date == None):
         min_date = datetime.datetime.now() - datetime.timedelta(days = max_days_delta)
@@ -123,10 +131,10 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
     while to_update:
         algo_id = to_update.pop()
         updated_algos.append(algo_id)
-        matches = terminalAPI.getLastMatches(algo_id)
+        matches = getLastMatches(algo_id)
         updated_tables = [False,False,False]
         
-        if(len(matches)):
+        if(matches):
             algo = matches[0]['winning_algo'] if matches[0]['winning_algo']['id'] == algo_id else matches[0]['losing_algo']
             user = algo['user']
             
