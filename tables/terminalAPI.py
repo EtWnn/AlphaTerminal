@@ -58,7 +58,7 @@ def getLastMatches(algo_id):
         
 
 """
-return the raw content (string) of a match
+return the raw content (string) of a match from the api
 """
 def getMatchContent(match_id):
     try:

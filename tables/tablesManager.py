@@ -76,11 +76,14 @@ def getAlgosId(user):
 """
 return the ids of the matches of a user
 """
-def getMatchId(user):
+def getMatchId(user = None, algo = None):
     users_table = getUsersTable()
     algos_table = getAlgosTable()
     
-    algos_list = users_table.at[user,'algos_list']
+    algos_list = [algo]
+    if(user):
+        algos_list = users_table.at[user,'algos_list']
+        
     matches_list = []
     for algo_id in algos_list:
         matches_list = matches_list + algos_table.at[algo_id,'matches_list']
