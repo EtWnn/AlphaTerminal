@@ -39,12 +39,12 @@ So our model will be a mixed CNN and FC NN.
 An output correspond to a single placment: either one firewall or one information or the possibility to stop the turn. 
 For general purpose, we store the output as a string '"<unit_type>_<x>_<y>"' (except for '"stop"')
 
-specific output needs will rely on this format to create the output needed (regression, classification ...)
+Specific output needs will rely on this format to create the output needed (regression, classification ...)
 
 ### c. Storage
 
-every image (3D matrix representing the board) will be stored in the folder "cnn_images" at the root. 
-a dataframe pickled as 'datasets/generalIO.pkl' will store the image_path, the image name, the flat inputs and the general output.
+Every image (3D matrix representing the board) will be stored in the folder "cnn_images" at the root.
+A dataframe pickled as 'datasets/generalIO.pkl' will store the image_path, the image name, the flat inputs and the general output.
 
 ### d. Computation
 
@@ -52,7 +52,8 @@ The class 'GeneralIOMaker' and its method 'compute' are used to compute the inpu
 
 It will also take some times so take a book.
 
-The function 'computeEagle' is used to create only the eagle serie inputs/outputs. For the first model, just run 'computeEagle([99748])' as this model will learn only from the algo number '99748'.
+The function 'computeEagle' is used to create only the eagle serie inputs/outputs. 
+For the first model, just run 'computeEagle([99748])' as this model will learn only from the algo number '99748'.
 
 ### e. Specific Output
 
