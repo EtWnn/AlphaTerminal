@@ -27,4 +27,33 @@ The function 'downloadEagle' in the file 'tables/matchesDownload.py' will downlo
 
 ### 2. Database construction
 
-To be coming
+### a. Inputs details
+
+The format of input chosen is a mixed input. The first is a 3D matrix representing the board. The first two dimensions are for the position, the third for the type of a unit. As the board is in a diamond shape, it has been shifted and transform to end as a rectangle which is easier/lighter to interpret by a model. The final shape is (15,29,7).
+The second part of the input is flat: it correspond to 7 usefull metrics: [p1_health, p1_cores, p1_bits, p2_health, p2_cores, p2_bits, turn_number]
+
+So our model will be a mixed CNN and FC NN. 
+
+### b. Output details
+
+An output correspond to a single placment: either one firewall or one information or the possibility to stop the turn. 
+For general purpose, we store the output as a string '"<unit_type>_<x>_<y>"' (except for '"stop"')
+
+specific output needs will rely on this format to create the output needed (regression, classification ...)
+
+### c. Storage
+
+every image (3D matrix representing the board) will be stored in the folder "cnn_images" at the root. 
+a dataframe pickled as 'datasets/generalIO.pkl' will store the image_path, the image name, the flat inputs and the general output.
+
+### d. Computation
+
+The class 'GeneralIOMaker' and its method 'compute' are used to compute the inputs and general outputs of matches. This involve a lot of files to be created and will certainly overload your PC. So close every unnecessary thing and let your computer run (even if you get a non responding warning). About 250 files are created per match (about 850ko per match).
+
+It will also take some times so take a book.
+
+The function 'computeEagle' is used to create only the eagle serie inputs/outputs. For the first model, just run 'computeEagle([99748])' as this model will learn only from the algo number '99748'.
+
+### e. Specific Output
+
+to be coming
