@@ -136,7 +136,7 @@ def saveEagleLoc(eagle_locs):
 """
 load the eagle loc file
 """
-def loadEagleLoc(eagle_locs):
+def loadEagleLoc():
     with open('tables/eagle_locs.pkl','rb') as f:
         return pickle.load(f)
         

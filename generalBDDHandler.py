@@ -13,6 +13,7 @@ import pandas as pd
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 import generalIOLib
 from utils.config import getTiles
@@ -145,6 +146,17 @@ class GeneralBDDHandler:
             pickle.dump(image, f)
         self.__addCount()
         return img_path, img_name
+    
+    """
+    return a set of images
+    """
+    def getImages(self, images_paths):
+        total_shape = [len(images_paths)] + list(generalIOLib.MatrixInput().shape)
+        images = np.zeros(total_shape, dtype = 'uint8')
+        for i,image_path in enumerate(tqdm(images_paths)):
+            with open(image_path,'rb') as f:
+                images[i] = pickle.load(f)
+        return images
     
     """
     plot an image
