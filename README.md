@@ -57,4 +57,15 @@ For the first model, just run 'computeEagle([99748])' as this model will learn o
 
 ### e. Specific Output
 
-to be coming
+For the time being, the model specific outputs will be computed in the notebook where the model is trained (it is quite a cheap operation)
+
+### 3. Model
+
+### a. Choice
+
+I chosed the eagle algo with the most recorded matches (155): it's the algo id 99748.
+The output will be a one hot vector, and the range will be every possible move that eagle 99748 can do. (This information is taken from eagle_locs already computed, it is stored in 'tables/eagle_locs.pkl')
+
+### b. Notebook
+
+The notebook is 'single_eagle_training.ipynb'. Plenty of things can be done but that should give you a good preview.
