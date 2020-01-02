@@ -104,7 +104,7 @@ def downloadMatchesSelection(matches_ids = None):
             if has_crashed:
                 matches_table.at[match_id,"has_crashed"] = True
             tablesManager.setMatchesTable(matches_table)
-        print("\ndone")
+        print("\nDone !")
 
 """
 Download only the matches of the user Felix (F.Richter)
