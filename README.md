@@ -23,7 +23,7 @@ For your local needs, you will need to execute the function `resetMatchesBool` i
 #### c. downloads
 
 You can now download every matches you want from the `matches_table`. Bear in mind that each replay file weigths about 1.8Mo and there are more than 50k replay in the `matches_table` as of now (24/12/2019).
-The function `downloadEagle` in the file `tables/matchesDownload.py` will download every matches of the Eagle algos serie. Our first work will use this serie.
+The function `downloadEagle` in the file `tables/matchesDownload.py` will download every matches of the Eagle algos serie. Our first work will use this series.
 
 
 ### 2. Database construction
@@ -31,30 +31,30 @@ The function `downloadEagle` in the file `tables/matchesDownload.py` will downlo
 ### a. Inputs details
 
 The format of input chosen is a mixed input. The first is a 3D matrix representing the board. The first two dimensions are for the position, the third for the type of a unit. As the board is in a diamond shape, it has been shifted and transform to end as a rectangle which is easier/lighter to interpret by a model. The final shape is (15,29,7).
-The second part of the input is flat: it correspond to 7 usefull metrics: [p1_health, p1_cores, p1_bits, p2_health, p2_cores, p2_bits, turn_number]
+The second part of the input is flat: it correspond to 7 usefull metrics: `[p1_health, p1_cores, p1_bits, p2_health, p2_cores, p2_bits, turn_number]`
 
 So our model will be a mixed CNN and FC NN. 
 
 ### b. Output details
 
-An output correspond to a single placment: either one firewall or one information or the possibility to stop the turn. 
-For general purpose, we store the output as a string '"<unit_type>_<x>_<y>"' (except for '"stop"')
+An output corresponds to a single placement: either one firewall or one information or the possibility to stop the turn. 
+For general purpose, we store the output as a string `"<unit_type>_<x>_<y>"` (except for `"stop"`)
 
 Specific output needs will rely on this format to create the output needed (regression, classification ...)
 
 ### c. Storage
 
 Every image (3D matrix representing the board) will be stored in the folder "cnn_images" at the root.
-A dataframe pickled as 'datasets/generalIO.pkl' will store the image_path, the image name, the flat inputs and the general output.
+A dataframe pickled as `datasets/generalIO.pkl` will store the image **path**, the image **name**, the **flat inputs** and the **general output**.
 
 ### d. Computation
 
-The class 'GeneralIOMaker' and its method 'compute' are used to compute the inputs and general outputs of matches. This involve a lot of files to be created and will certainly overload your PC. So close every unnecessary thing and let your computer run (even if you get a non responding warning). About 250 files are created per match (about 850ko per match).
+The class `GeneralIOMaker` and its method `compute` are used to compute the inputs and general outputs of matches. This involve a lot of files to be created and will certainly overload your PC. So close every unnecessary thing and let your computer run (even if you get a non responding warning). About 250 files are created per match (about 850ko per match).
 
 It will also take some times so take a book.
 
-The function 'computeEagle' is used to create only the eagle serie inputs/outputs. 
-For the first model, just run 'computeEagle([99748])' as this model will learn only from the algo number '99748'.
+The function `computeEagle` is used to create only the eagle serie inputs/outputs. 
+For the first model, just run  `computeEagle([99748])` as this model will learn only from the algo number `99748`.
 
 ### e. Specific Output
 
@@ -65,7 +65,7 @@ For the time being, the model specific outputs will be computed in the notebook 
 ### a. Choice
 
 I chosed the eagle algo with the most recorded matches (155): it's the algo id 99748.
-The output will be a one hot vector, and the range will be every possible move that eagle 99748 can do. (This information is taken from eagle_locs already computed, it is stored in 'tables/pkl/eagle_locs.pkl')
+The output will be a one hot vector, and the range will be every possible move that eagle 99748 can do. (This information is taken from eagle_locs already computed, it is stored in `tables/pkl/eagle_locs.pkl`)
 
 ### b. Notebook
 
