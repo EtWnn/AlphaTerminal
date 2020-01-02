@@ -22,9 +22,9 @@ except ImportError:
 set the path and folders for the tables and raw replays
 """
 REPLAYSPATH = '../raw_replays'
-USERTABLEPATH = 'users_table.pkl'
-ALGOTABLEPATH = 'algos_table.pkl'
-MATCHETABLEPATH = 'matches_table.pkl'
+USERTABLEPATH = 'pkl/users_table.pkl'
+ALGOTABLEPATH = 'pkl/algos_table.pkl'
+MATCHETABLEPATH = 'pkl/matches_table.pkl'
 
 """
 getters for the three tables
@@ -181,5 +181,6 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
         counter += 1   
         if(verbose):
             print(counter,'done,',len(to_update),'remaining')
-        
+    
+
         
