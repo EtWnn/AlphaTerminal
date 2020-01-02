@@ -1,5 +1,9 @@
 # AlphaTerminal
 
+## Environment setup
+
+If you're using Anaconda to manage your Python environments, you can replicate ours by running `conda env create -f environment.yml`.
+
 ## Initial setup
 
 There are a lot of data files in this project so you will have to download/construct them first.
