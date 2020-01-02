@@ -9,8 +9,8 @@ this scripts allows to download matches
 """
 import os
 import numpy as np
-from tqdm import tqdm
 import json
+from tqdm import tqdm
 
 import tablesManager
 import terminalAPI
@@ -72,7 +72,7 @@ Download a selection of matches
 if matches_ids is not specified, every match for the matches table will be downloaded
 """
 def downloadMatchesSelection(matches_ids = None):
-    print('configuration running, wait please...')
+    print('Configuration running, wait please...')
     checkReplayRepo()
     matches_table = tablesManager.getMatchesTable()
     if not(matches_ids):
@@ -80,8 +80,8 @@ def downloadMatchesSelection(matches_ids = None):
     downloadable = list(matches_table.loc[(matches_table["download_status"]==False) & (matches_table["has_crashed"]==False)].index)
     to_download = np.unique(list(set([match_id for match_id in matches_ids if match_id in downloadable])))
     estimated_download = 1.8 * len(to_download)
-    print("warning! you are about to download {} files (estimated size : {:.1f} Mo)".format(len(to_download), estimated_download))
-    answer = input("do you wish to continue? (yes/no): ")
+    print(f"Warning! You are about to download {len(to_download)} files (estimated size : {estimated_download:.1f} Mo)")
+    answer = input("Do you wish to continue? (yes/no): ")
     if(answer == "yes"):
         for match_id in tqdm(to_download):
             match_content_b = terminalAPI.getMatchContent(match_id)
@@ -100,7 +100,7 @@ def downloadMatchesSelection(matches_ids = None):
                             matches_table.at[match_id,"download_status"] = True
             except Exception as e:
                 has_crashed = True
-                print('error for match ' + str(match_id) + ' :', e)
+                print(f"error for match {match_id} : {e}")
             if has_crashed:
                 matches_table.at[match_id,"has_crashed"] = True
             tablesManager.setMatchesTable(matches_table)
@@ -112,3 +112,6 @@ Download only the matches of the user Felix (F.Richter)
 def downloadEagle():
     matches_id = list(np.unique(tablesManager.getMatchId("F.Richter") + tablesManager.getMatchId("Felix")))
     downloadMatchesSelection(matches_id)
+
+if __name__ == '__main__':
+    downloadEagle()
