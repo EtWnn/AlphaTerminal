@@ -11,6 +11,7 @@ import os
 import numpy as np
 import json
 from tqdm import tqdm
+import threading
 
 import tablesManager
 import terminalAPI
@@ -66,6 +67,32 @@ def checkRawDownloaded():
             pass
     tablesManager.setMatchesTable(matches_table)
     
+"""
+Downloads a specific match, and add it to the matches table
+"""
+def handleMatch(match_id, matches_table, semaphore=None):
+    match_content_b = terminalAPI.getMatchContent(match_id)
+    match_content = str(match_content_b)
+    has_crashed = True
+    try:
+        if match_content_b:
+            frames = [json.loads(c) for c in searchDico(match_content)]
+            if(len(frames)):
+                has_crashed = frames[-1]['endStats']['player1']['crashed'] or frames[-1]['endStats']['player2']['crashed']
+                matches_table.at[match_id,'winner_side'] = int(frames[-1]['endStats']['winner'])
+                if not(has_crashed):
+                    f = open(f"{tablesManager.REPLAYSPATH}/{match_id}.replay", 'wb')
+                    f.write(match_content_b)
+                    f.close()
+                    matches_table.at[match_id,"download_status"] = True
+    except Exception as e:
+        has_crashed = True
+        print(f"error for match {match_id} : {e}")
+    if has_crashed:
+        matches_table.at[match_id,"has_crashed"] = True
+    tablesManager.setMatchesTable(matches_table)
+    if semaphore:
+        semaphore.release()
 
 """
 Download a selection of matches
@@ -80,30 +107,18 @@ def downloadMatchesSelection(matches_ids = None):
     downloadable = list(matches_table.loc[(matches_table["download_status"]==False) & (matches_table["has_crashed"]==False)].index)
     to_download = np.unique(list(set([match_id for match_id in matches_ids if match_id in downloadable])))
     estimated_download = 1.8 * len(to_download)
+
     print(f"Warning! You are about to download {len(to_download)} files (estimated size : {estimated_download:.1f} Mo)")
     answer = input("Do you wish to continue? (yes/no): ")
-    if(answer == "yes"):
+    if('y' in answer.lower()):
+        semaphore = threading.Semaphore(value=20)
         for match_id in tqdm(to_download):
-            match_content_b = terminalAPI.getMatchContent(match_id)
-            match_content = str(match_content_b)
-            has_crashed = True
-            try:
-                if match_content_b:
-                    frames = [json.loads(c) for c in searchDico(match_content)]
-                    if(len(frames)):
-                        has_crashed = frames[-1]['endStats']['player1']['crashed'] or frames[-1]['endStats']['player2']['crashed']
-                        matches_table.at[match_id,'winner_side'] = int(frames[-1]['endStats']['winner'])
-                        if not(has_crashed):
-                            f = open(tablesManager.REPLAYSPATH + '/' + str(match_id) + '.replay','wb')
-                            f.write(match_content_b)
-                            f.close()
-                            matches_table.at[match_id,"download_status"] = True
-            except Exception as e:
-                has_crashed = True
-                print(f"error for match {match_id} : {e}")
-            if has_crashed:
-                matches_table.at[match_id,"has_crashed"] = True
-            tablesManager.setMatchesTable(matches_table)
+            semaphore.acquire()
+            t = threading.Thread(
+                target=handleMatch,
+                args=(match_id, matches_table, semaphore)
+            )
+            t.start()
         print("\nDone !")
 
 """
