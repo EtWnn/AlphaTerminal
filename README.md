@@ -51,10 +51,12 @@ A dataframe pickled as `datasets/generalIO.pkl` will store the image **path**, t
 
 The class `GeneralIOMaker` and its method `compute` are used to compute the inputs and general outputs of matches. This involve a lot of files to be created and will certainly overload your PC. So close every unnecessary thing and let your computer run (even if you get a non responding warning). About 250 files are created per match (about 850ko per match).
 
-It will also take some times so take a book.
+It will also take some times so take a look.
 
 The function `computeEagle` is used to create only the eagle serie inputs/outputs. 
 For the first model, just run  `computeEagle([99748])` as this model will learn only from the algo number `99748`.
+
+> Warning: Make sure you have a `datasets` folder at the root of your project before running this.
 
 ### e. Specific Output
 
