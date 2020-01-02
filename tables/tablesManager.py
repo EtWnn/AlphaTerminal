@@ -12,7 +12,7 @@ import pandas as pd
 import datetime
 import pathlib
 import argparse
-from progress.bar import Bar
+from tqdm import tqdm
 
 try:
     from .terminalAPI import getAlgoIdLeaderBoard,getLastMatches
@@ -31,8 +31,7 @@ MATCHETABLEPATH = 'pkl/matches_table.pkl'
 """
 getters for the three tables
 """
-
-def getTableFromPath(file_path, table_default)
+def getTableFromPath(file_path, table_default):
     table = None
     try:
         table = pd.read_pickle(pathlib.Path(__file__).parent / file_path)
@@ -136,8 +135,7 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
     counter = 0
 
     # Initiate a progress bar
-    progress = Bar(f"Updating...", max=len(to_update))
-    progress.next(0)
+    pbar = tqdm(desc="Updating...", total=len(to_update))
     while to_update:
         algo_id = to_update.pop()
         updated_algos.append(algo_id)
@@ -174,7 +172,7 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
                 opponent = match['winning_algo'] if match['winning_algo']['id'] != algo_id else match['losing_algo']
                 date_delta = (datetime.datetime.strptime( opponent['lastMatchmakingAttempt'][:10], '%Y-%m-%d') - min_date).days
                 if (not(opponent['id'] in updated_algos or opponent['id'] in to_update) and opponent['rating'] >= min_rating and date_delta>=0):
-                    progress.max += 1 # Update Max of the progress bar
+                    pbar.total += 1 # Update Max of the progress bar
                     to_update.append(opponent['id'])
 
             if(updated_tables[0]):
@@ -184,11 +182,11 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
             if(updated_tables[2]):
                 setMatchesTable(matches_table)
            
-        progress.next()
+        pbar.update(1)
         counter += 1   
         if(verbose):
             print(counter,'done,',len(to_update),'remaining')
-    progress.finish() # End progress bar
+    pbar.close() # End progress bar
 
 
 if __name__ == "__main__":
@@ -217,17 +215,17 @@ if __name__ == "__main__":
                         help='max number of days to look at (default 10)')
     args = parser.parse_args()
 
-    if args.r:
+    if args.reset:
         resetMatchesBool()
         exit()
-    if args.rt:
+    if args.resetType:
         resetTableType()
         exit()
 
     updateTables(
-        starting_ids=args.ids, 
-        min_rating=args.mr,
-        min_date=args.md,
-        max_days_delta=args.mdd,
-        verbose=args.v
+        starting_ids=args.startingIds, 
+        min_rating=args.minRating,
+        min_date=args.minDate,
+        max_days_delta=args.maxDaysDelta,
+        verbose=args.verbose
     )
