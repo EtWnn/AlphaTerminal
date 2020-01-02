@@ -32,32 +32,26 @@ MATCHETABLEPATH = 'pkl/matches_table.pkl'
 getters for the three tables
 """
 
-def getUsersTable():
-    user_table = None
+def getTableFromPath(file_path, table_default)
+    table = None
     try:
-        user_table = pd.read_pickle(pathlib.Path(__file__).parent / USERTABLEPATH)
+        table = pd.read_pickle(pathlib.Path(__file__).parent / file_path)
     except FileNotFoundError:
-        print(f"Could not find file at {USERTABLEPATH} ! Returning empty DataFrame...")
-        user_table = pd.DataFrame(columns = ['name','algos_list']).set_index('name')
-    return user_table
+        print(f"Could not find file at {file_path} ! Returning empty DataFrame...")
+        table = table_default
+    return table
+
+def getUsersTable():
+    default = pd.DataFrame(columns = ['name','algos_list']).set_index('name')
+    return getTableFromPath(USERTABLEPATH, default)
 
 def getAlgosTable():
-    algos_table = None
-    try:
-        algos_table = pd.read_pickle(pathlib.Path(__file__).parent / ALGOTABLEPATH)
-    except FileNotFoundError:
-        print(f"Could not find file at {ALGOTABLEPATH} ! Returning empty DataFrame...")
-        algos_table = pd.DataFrame(columns = ['id','name','user','matches_list']).set_index('id')
-    return algos_table
+    default = pd.DataFrame(columns = ['id','name','user','matches_list']).set_index('id')
+    return getTableFromPath(ALGOTABLEPATH, default)
         
 def getMatchesTable():
-    matches_table = None
-    try:
-        matches_table = pd.read_pickle(pathlib.Path(__file__).parent / MATCHETABLEPATH)
-    except FileNotFoundError:
-        print(f"Could not find file at {MATCHETABLEPATH} ! Returning empty DataFrame...")
-        matches_table = pd.DataFrame(columns = ['id','winner_id','loser_id','winner_side','download_status','has_crashed']).set_index('id')
-    return matches_table
+    default = pd.DataFrame(columns = ['id','winner_id','loser_id','winner_side','download_status','has_crashed']).set_index('id')
+    return getTableFromPath(MATCHETABLEPATH, default)
 
 """
 setters for the three tables
