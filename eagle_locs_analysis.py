@@ -130,14 +130,14 @@ def unifyLocs(eagle_locs, eagle_algos = []):
 save the eagle loc file
 """
 def saveEagleLoc(eagle_locs):
-    with open('tables/eagle_locs.pkl','wb') as f:
+    with open('tables/pkl/eagle_locs.pkl','wb') as f:
         pickle.dump(eagle_locs,f)
         
 """
 load the eagle loc file
 """
 def loadEagleLoc():
-    with open('tables/eagle_locs.pkl','rb') as f:
+    with open('tables/pkl/eagle_locs.pkl','rb') as f:
         return pickle.load(f)
         
 """

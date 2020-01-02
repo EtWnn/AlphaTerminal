@@ -1,8 +1,11 @@
-cnn_images/*
-raw_replays/*
-datasets/*
+# Data
+cnn_images/
+raw_replays/
+datasets/
+
+# Credentials
 tables/credentials
-tables/__pycache__
-utils/__pycache__
-__pycache__
+
+# Python generated files
+__pycache__/
 .ipynb_checkpoints

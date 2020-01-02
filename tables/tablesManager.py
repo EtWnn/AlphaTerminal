@@ -11,6 +11,8 @@ this files handles the three tables that are used to store data about terminal u
 import pandas as pd
 import datetime
 import pathlib
+import argparse
+from tqdm import tqdm
 
 try:
     from .terminalAPI import getAlgoIdLeaderBoard,getLastMatches
@@ -22,37 +24,33 @@ except ImportError:
 set the path and folders for the tables and raw replays
 """
 REPLAYSPATH = '../raw_replays'
-USERTABLEPATH = 'users_table.pkl'
-ALGOTABLEPATH = 'algos_table.pkl'
-MATCHETABLEPATH = 'matches_table.pkl'
+USERTABLEPATH = 'pkl/users_table.pkl'
+ALGOTABLEPATH = 'pkl/algos_table.pkl'
+MATCHETABLEPATH = 'pkl/matches_table.pkl'
 
 """
 getters for the three tables
 """
+def getTableFromPath(file_path, table_default):
+    table = None
+    try:
+        table = pd.read_pickle(pathlib.Path(__file__).parent / file_path)
+    except FileNotFoundError:
+        print(f"Could not find file at {file_path} ! Returning empty DataFrame...")
+        table = table_default
+    return table
 
 def getUsersTable():
-    user_table = None
-    try:
-        user_table = pd.read_pickle(pathlib.Path(__file__).parent / USERTABLEPATH)
-    except FileNotFoundError:
-        user_table = pd.DataFrame(columns = ['name','algos_list']).set_index('name')
-    return user_table
+    default = pd.DataFrame(columns = ['name','algos_list']).set_index('name')
+    return getTableFromPath(USERTABLEPATH, default)
 
 def getAlgosTable():
-    algos_table = None
-    try:
-        algos_table = pd.read_pickle(pathlib.Path(__file__).parent / ALGOTABLEPATH)
-    except FileNotFoundError:
-        algos_table = pd.DataFrame(columns = ['id','name','user','matches_list']).set_index('id')
-    return algos_table
+    default = pd.DataFrame(columns = ['id','name','user','matches_list']).set_index('id')
+    return getTableFromPath(ALGOTABLEPATH, default)
         
 def getMatchesTable():
-    matches_table = None
-    try:
-        matches_table = pd.read_pickle(pathlib.Path(__file__).parent / MATCHETABLEPATH)
-    except FileNotFoundError:
-        matches_table = pd.DataFrame(columns = ['id','winner_id','loser_id','winner_side','download_status','has_crashed']).set_index('id')
-    return matches_table
+    default = pd.DataFrame(columns = ['id','winner_id','loser_id','winner_side','download_status','has_crashed']).set_index('id')
+    return getTableFromPath(MATCHETABLEPATH, default)
 
 """
 setters for the three tables
@@ -114,11 +112,15 @@ if starting_ids is not specified, the 10 best algos will be taken from the leade
 min_date has to be a string under the format "YYYY-MM-DD"
 if min_date is specified then max_days_delta is ignored
 """
-def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_days_delta = 10, verbose = 1):
+def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_days_delta = 10, verbose = None):
     
     if(starting_ids == None):
         starting_ids = [algo['id'] for algo in getAlgoIdLeaderBoard()]
-        
+    if(min_rating == None):
+        min_rating = 2000
+    if(max_days_delta == None):
+        max_days_delta = 10
+    
     if(min_date == None):
         min_date = datetime.datetime.now() - datetime.timedelta(days = max_days_delta)
     else:
@@ -131,6 +133,9 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
     updated_algos = []
     to_update = list(starting_ids)
     counter = 0
+
+    # Initiate a progress bar
+    pbar = tqdm(desc="Updating...", total=len(to_update))
     while to_update:
         algo_id = to_update.pop()
         updated_algos.append(algo_id)
@@ -140,8 +145,6 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
         if(matches):
             algo = matches[0]['winning_algo'] if matches[0]['winning_algo']['id'] == algo_id else matches[0]['losing_algo']
             user = algo['user']
-            
-            
             
             #we update the user_table
             if(user in users_table.index):
@@ -165,12 +168,13 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
                     matches_table.at[match_id] = [match['winning_algo']['id'],match['losing_algo']['id'],-1,False,False]
                     updated_tables[2] = True
                     
+                # Add opponent to list of people to update as well
                 opponent = match['winning_algo'] if match['winning_algo']['id'] != algo_id else match['losing_algo']
                 date_delta = (datetime.datetime.strptime( opponent['lastMatchmakingAttempt'][:10], '%Y-%m-%d') - min_date).days
                 if (not(opponent['id'] in updated_algos or opponent['id'] in to_update) and opponent['rating'] >= min_rating and date_delta>=0):
+                    pbar.total += 1 # Update Max of the progress bar
                     to_update.append(opponent['id'])
-                    
-            
+
             if(updated_tables[0]):
                 setUsersTable(users_table)
             if(updated_tables[1]):
@@ -178,8 +182,50 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
             if(updated_tables[2]):
                 setMatchesTable(matches_table)
            
+        pbar.update(1)
         counter += 1   
         if(verbose):
             print(counter,'done,',len(to_update),'remaining')
+    pbar.close() # End progress bar
+
+
+if __name__ == "__main__":
+    """
+    Main script used for CLI.
+    Launch with '--help' to access the CLI's help.
+    """
+    # The parser for the command line arguments
+    parser = argparse.ArgumentParser(
+        description="Manage tables for users, algos and matches.")
+    parser.add_argument('-r', '--reset', required=False, action='store_true',
+                        help='reset the crashed and downloaded boolean on the matches table')
+    parser.add_argument('-rt', '--resetType', required=False, action='store_true',
+                        help='reset the types of the matches table (it can change for dark reasons...)')
         
-        
+    parser.add_argument('-v', '--verbose', required=False, action='store_true',
+                        help='should run with higher verbosity')
+
+    parser.add_argument('-ids', '--startingIds', metavar="<starting_ids>", required=False,
+                        help='if starting_ids is not specified, the 10 best algos will be taken from the leaderboard')
+    parser.add_argument('-mr', '--minRating', metavar="<min_rating>", required=False,
+                        help='minimum rating of algo to look at (default 2000)')
+    parser.add_argument('-md', '--minDate', metavar="<min_date>", required=False,
+                        help='start date to search for (default today-max_days_delta)')
+    parser.add_argument('-mdd', '--maxDaysDelta', metavar="<max_days_delta>", required=False,
+                        help='max number of days to look at (default 10)')
+    args = parser.parse_args()
+
+    if args.reset:
+        resetMatchesBool()
+        exit()
+    if args.resetType:
+        resetTableType()
+        exit()
+
+    updateTables(
+        starting_ids=args.startingIds, 
+        min_rating=args.minRating,
+        min_date=args.minDate,
+        max_days_delta=args.maxDaysDelta,
+        verbose=args.verbose
+    )
