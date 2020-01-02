@@ -35,30 +35,27 @@ getters for the three tables
 def getUsersTable():
     user_table = None
     try:
-        print(f"Reading User Table from {USERTABLEPATH}...")
         user_table = pd.read_pickle(pathlib.Path(__file__).parent / USERTABLEPATH)
     except FileNotFoundError:
-        print(f"Could not find file ! Returning empty DataFrame...")
+        print(f"Could not find file at {USERTABLEPATH} ! Returning empty DataFrame...")
         user_table = pd.DataFrame(columns = ['name','algos_list']).set_index('name')
     return user_table
 
 def getAlgosTable():
     algos_table = None
     try:
-        print(f"Reading Algos Table from {ALGOTABLEPATH}...")
         algos_table = pd.read_pickle(pathlib.Path(__file__).parent / ALGOTABLEPATH)
     except FileNotFoundError:
-        print(f"Could not find file ! Returning empty DataFrame...")
+        print(f"Could not find file at {ALGOTABLEPATH} ! Returning empty DataFrame...")
         algos_table = pd.DataFrame(columns = ['id','name','user','matches_list']).set_index('id')
     return algos_table
         
 def getMatchesTable():
     matches_table = None
     try:
-        print(f"Reading Matches Table from {MATCHETABLEPATH}...")
         matches_table = pd.read_pickle(pathlib.Path(__file__).parent / MATCHETABLEPATH)
     except FileNotFoundError:
-        print(f"Could not find file ! Returning empty DataFrame...")
+        print(f"Could not find file at {MATCHETABLEPATH} ! Returning empty DataFrame...")
         matches_table = pd.DataFrame(columns = ['id','winner_id','loser_id','winner_side','download_status','has_crashed']).set_index('id')
     return matches_table
 
@@ -198,6 +195,7 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
         if(verbose):
             print(counter,'done,',len(to_update),'remaining')
     progress.finish() # End progress bar
+
 
 if __name__ == "__main__":
     """
