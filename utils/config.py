@@ -7,7 +7,7 @@ Created on Wed Sep 18 13:32:09 2019
 """
 
 CONFIG = {
-        'stabilities':[60,30,75,15,5,40],
+        'stabilities':[60,30,75,15,5,40,999],
         'cost':[1,4,6,1,3,1],
         'names':['filter','encryptor','destructor','ping','EMP','scrambler','removal']
         }

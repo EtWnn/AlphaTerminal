@@ -16,65 +16,29 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 import generalIOLib
-from utils.config import getTiles
+from utils.config import getTiles, CONFIG
+
+"""
+return the remaning stability of a unit on a 255 scale (so it can be stored as uint8)
+"""
+def convertStability(unit_type, remaining_stability, uint8 = False):
+    threshold_numbers = [1,1,1,40,10,40,1]
+    if(uint8):
+        return int(255 * remaining_stability / ( threshold_numbers[unit_type] * CONFIG['stabilities'][unit_type]))
+    else:
+        return remaining_stability / ( threshold_numbers[unit_type] * CONFIG['stabilities'][unit_type])
 
 class GeneralBDDHandler:
     
     def __init__(self):
         
-        self.bdd_name = "generalIO"
+        self.bdd_name = "generalIO_v2"
         self.bdd_path = 'datasets/' + self.bdd_name + '.pkl'
-        
-        self.images_path = 'cnn_images/'
         
         self.matrixInputs = generalIOLib.MatrixInput()
         self.flatInputsDic = generalIOLib.FlatInputDic()
         
         self.bdd = self.getBDD()
-        
-        self.depth = 3
-        self.d_digits = [3 for d in range(self.depth)]
-        self.d_counts = [0 for d in range(self.depth)]
-        self.d_max = [10**(d) - 1 for d in self.d_digits]
-        try:
-            index = pd.read_csv(self.bdd_path,usecols = ['image_path'])
-            last_image_path = index.iloc[index.shape[0]-1]['image_path']
-            image_name = re.split('/',last_image_path)[-1]
-            index_count = 0
-            for d in range(self.depth):
-                self.d_counts[d] = int(image_name[index_count:index_count + self.d_digits[d]])
-                index_count += self.d_digits[d]
-            self.updateCounts()
-        except Exception:
-            pass
-    
-    """
-    update the image count according to the bdd
-    """
-    def __updateImageCount(self):
-        image_names = list(self.bdd['image_name'])
-        image_names.sort()
-        self.d_counts = [0 for d in range(self.depth)]
-        if(len(image_names)):
-            last_image_name = image_names[-1]
-            index_count = 0
-            for d in range(self.depth):
-                self.d_counts[d] = int(last_image_name[index_count:index_count + self.d_digits[d]])
-                index_count += self.d_digits[d]
-            self.__addCount()
-            
-    """
-    update the counts to the next image
-    """
-    def __addCount(self):
-        self.d_counts[self.depth - 1] += 1
-        for i in range(self.depth - 1,-1,-1):
-            if(self.d_counts[i] >= 10**self.d_digits[i]):
-                if(i == 0):
-                    raise Exception("Max number of files reached")
-                self.d_counts[i - 1] += 1
-                self.d_counts[i] = 0
-        
     
     """
     return a previously saved version of the bdd or create one if none exist
@@ -83,7 +47,7 @@ class GeneralBDDHandler:
         try:
             bdd = pd.read_pickle(self.bdd_path)
         except FileNotFoundError:
-            bdd = pd.DataFrame(columns = ['match_id','flipped', 'image_path', 'image_name'] + self.flatInputsDic.column_names + ['output'])
+            bdd = pd.DataFrame(columns = ['match_id','flipped', 'image_units'] + self.flatInputsDic.column_names + ['output'])
         return bdd
     
     """
@@ -101,20 +65,15 @@ class GeneralBDDHandler:
     """
     add rows to the bdd
     """
-    def addRows(self, match_id, flipped, images, flat_inputs, outputs):
-        flat_inputs = np.array(flat_inputs)
-        img_pathes = []
-        img_names = []
-        for image in images:
-            img_path, img_name = self.saveImage(image)
-            img_pathes.append(img_path)
-            img_names.append(img_name)
+    def addRows2(self, match_id, flipped, image_units_list, flat_inputs, outputs):
+
         dico  = {}
-        dico['match_id'] = len(img_pathes) * [match_id]
-        dico['flipped'] = len(img_pathes) * [flipped]
-        dico['image_path'] = img_pathes
-        dico['image_name'] = img_names
         
+        dico['match_id'] = len(outputs) * [match_id]
+        dico['flipped'] = len(outputs) * [flipped]
+        dico['image_units'] = image_units_list
+        
+        flat_inputs = np.array(flat_inputs)
         for i, col_name in enumerate(self.flatInputsDic.column_names):
             dico[col_name] = flat_inputs[:,i]
             
@@ -125,45 +84,47 @@ class GeneralBDDHandler:
         self.setbdd(self.bdd)
     
     """
-    save an image according the current count and return the path and the name of the image
+    add rows to the bdd
     """
-    def saveImage(self, image):
-        img_name = ""
-        dir_path = self.images_path
-        for i,d in enumerate(self.d_counts[:-1]):
-            str_d = str(d).zfill(self.d_digits[i])
-            dir_path +=str_d + '/'
-            img_name += str(d).zfill(self.d_digits[i])
-            
-        img_name += str(self.d_counts[-1]).zfill(self.d_digits[-1])
-        try:
-            os.makedirs(dir_path)
-        except FileExistsError:
-            pass
+    def addRows(self, match_id, flipped, image_units_list, flat_inputs, outputs):
+
+        dico  = {}
         
-        img_path = dir_path + '/' + img_name
-        with open(img_path, 'wb') as f:
-            pickle.dump(image, f)
-        self.__addCount()
-        return img_path, img_name
+        dico['match_id'] = len(outputs) * [match_id]
+        dico['flipped'] = len(outputs) * [flipped]
+        dico['image_units'] = image_units_list
+        
+        flat_inputs = np.array(flat_inputs)
+        for i, col_name in enumerate(self.flatInputsDic.column_names):
+            dico[col_name] = flat_inputs[:,i]
+            
+        dico['output'] = outputs
+        
+        new_df = pd.DataFrame(dico)
+        self.bdd = pd.concat([self.bdd, new_df])
+        self.setbdd(self.bdd)
     
     """
     return a set of images
     """
-    def getImages(self, images_paths):
-        total_shape = [len(images_paths)] + list(generalIOLib.MatrixInput().shape)
-        images = np.zeros(total_shape, dtype = 'uint8')
-        for i,image_path in enumerate(tqdm(images_paths)):
-            with open(image_path,'rb') as f:
-                images[i] = pickle.load(f)
+    def getImages(self, image_units_list, uint8 = False):
+        total_shape = [len(image_units_list)] + list(generalIOLib.MatrixInput().shape)
+        dtype = 'float32'
+        if uint8:
+            dtype = 'uint8'
+        images = np.zeros(total_shape, dtype = dtype)
+        for i,image_units in enumerate(tqdm(image_units_list)):
+            for x,y,unit_type, stability in image_units:
+                u,v = generalIOLib.shiftTile(x,y)
+                images[i][u][v][unit_type] += convertStability(unit_type,stability, uint8) #+= is here to stack information units
         return images
     
     """
     plot an image
     """
-    def plotImage(self, image_path, image_name = "", output = ""):
-        with open(image_path, 'rb') as f:
-            image = pickle.load(f)
+    def plotImage(self, image_units, image_name = "", output = ""):
+        image = self.getImages([image_units])[0]
+        
         colors = ['blue','orange','green','yellow','red','purple','red']
         names = ['filter','encryptor','destructor','ping','emp','scrambler','removal']
         markers = ['o','o','o','8','X','s','x']
@@ -198,4 +159,3 @@ class GeneralBDDHandler:
         ax1.legend()
         
         plt.show()
-        
