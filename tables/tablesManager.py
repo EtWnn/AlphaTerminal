@@ -17,9 +17,11 @@ from tqdm import tqdm
 try:
     from .terminalAPI import getAlgoIdLeaderBoard,getLastMatches
     from .tableDatabase import Database
+    from .timer import Timer
 except ImportError:
     from terminalAPI import getAlgoIdLeaderBoard,getLastMatches
     from tableDatabase import Database
+    from timer import Timer
 
 
 """
@@ -116,7 +118,6 @@ if min_date is specified then max_days_delta is ignored
 """
 def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_days_delta = 10, verbose = None):
     
-    
     if(starting_ids == None):
         starting_ids = [algo['id'] for algo in getAlgoIdLeaderBoard()]
     if(min_rating == None):
@@ -133,15 +134,14 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
     
     users_table = db.get_registered_users()
     algos_table = db.get_registered_algos_ids()
-    matches_table = getMatchesTable()
     
     users_to_add = []
     algos_to_add = []
     matches_to_add = []
+    added_match_ids = []
 
     updated_algos = []
     to_update = list(starting_ids)
-
     # Initiate a progress bar
     pbar = tqdm(desc="Updating...", total=len(to_update))
     while to_update:
@@ -149,7 +149,6 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
 
         updated_algos.append(algo_id)
         matches = getLastMatches(algo_id)
-        updated_tables = [False,False,False]
 
         if(matches):
             algo = matches[0]['winning_algo'] if matches[0]['winning_algo']['id'] == algo_id else matches[0]['losing_algo']
@@ -162,34 +161,51 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
             #we update the algos_table
             if not(algo_id in algos_table):
                 algos_table.append(algo_id)
-                algos_to_add.append((algo_id, algo['name'], user))
-                updated_tables[1] = True
+                algos_to_add.append((algo_id, algo['name'], user, algo['rating']))
 
             matches_for_algo = db.get_match_ids_for_algo(algo_id)
             for match in matches:
                 match_id = match['id']
 
                 if match_id not in matches_for_algo:
-                    matches_to_add.append((match_id, match['winning_algo']['id'],match['losing_algo']['id'],-1))
+                    if match_id not in added_match_ids:
+                        matches_to_add.append((match_id, match['winning_algo']['id'],match['losing_algo']['id']))
+                        added_match_ids.append(match_id)
 
-                opponent = match['winning_algo'] if match['winning_algo']['id'] != algo_id else match['losing_algo']
-                date_delta = (datetime.datetime.strptime( opponent['lastMatchmakingAttempt'][:10], '%Y-%m-%d') - min_date).days
-                if (
-                    not ( opponent['id'] in updated_algos or opponent['id'] in to_update ) 
-                    and opponent['rating'] >= min_rating 
-                    and date_delta>=0
-                ):
-                    pbar.total += 1 # Update Max of the progress bar
-                    pbar.update(0)
-                    to_update.append(opponent['id'])
-            
+                    opponent = match['winning_algo'] if match['winning_algo']['id'] != algo_id else match['losing_algo']
+                    date_delta = (datetime.datetime.strptime( opponent['lastMatchmakingAttempt'][:10], '%Y-%m-%d') - min_date).days
+                    opponent_id = opponent['id']
+                    if (
+                        not ( opponent_id in updated_algos or opponent_id in to_update ) 
+                        and opponent['rating'] >= min_rating 
+                        and date_delta>=0
+                    ):
+                        pbar.total += 1 # Update Max of the progress bar
+                        pbar.update(0)
+                        to_update.append(opponent_id)
+                    
+                    # Register the opponent algo as an algo that exists
+                    if not(opponent_id in algos_table or opponent_id in algos_to_add):
+                        algos_table.append(opponent_id)
+                        algos_to_add.append((opponent_id, opponent['name'], opponent['user'], opponent['rating']))
+                    if not(opponent['user'] in users_table or opponent['user'] in users_to_add):
+                        users_table.append(opponent['user'])
+                        users_to_add.append(opponent['user'])
+
         pbar.update(1)
-    
+
+
+
     db.insert_users(users_to_add)
     db.insert_algos(algos_to_add)
     db.insert_matches(matches_to_add)
-
     pbar.close() # End progress bar
+
+    print(f"TOTAL")
+    print(f"----------------------")
+    print(f"USERS ADDED   -- {len(users_to_add)}")
+    print(f"ALGOS ADDED   -- {len(algos_to_add)}")
+    print(f"MATCHES ADDED -- {len(matches_to_add)}")
 
 
 if __name__ == "__main__":
