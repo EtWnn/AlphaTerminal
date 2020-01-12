@@ -16,11 +16,11 @@ from tqdm import tqdm
 
 try:
     from .terminalAPI import getAlgoIdLeaderBoard,getLastMatches
-    from .tableDatabase import Database
+    from .database import Database
     from .timer import Timer
 except ImportError:
     from terminalAPI import getAlgoIdLeaderBoard,getLastMatches
-    from tableDatabase import Database
+    from database import Database
     from timer import Timer
 
 
@@ -132,8 +132,8 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
         
     db = Database()
     
-    users_table = db.get_registered_users()
-    algos_table = db.get_registered_algos_ids()
+    users_table = db.users.find_all_usernames()
+    algos_table = db.algos.find_all_ids()
     
     users_to_add = []
     algos_to_add = []
@@ -163,7 +163,7 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
                 algos_table.append(algo_id)
                 algos_to_add.append((algo_id, algo['name'], user, algo['rating']))
 
-            matches_for_algo = db.get_match_ids_for_algo(algo_id)
+            matches_for_algo = db.matches.find_ids_for_algo(algo_id)
             for match in matches:
                 match_id = match['id']
 
@@ -196,9 +196,9 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
 
 
 
-    db.insert_users(users_to_add)
-    db.insert_algos(algos_to_add)
-    db.insert_matches(matches_to_add)
+    db.users.insert_many(users_to_add)
+    db.algos.insert_many(algos_to_add)
+    db.matches.insert_many(matches_to_add)
     pbar.close() # End progress bar
 
     print(f"TOTAL")
