@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jan 12 12:26:00 2020
+
+@author: piaverous
+"""
+
 from .models import User
 from psycopg2.extras import execute_values
 
