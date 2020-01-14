@@ -54,21 +54,6 @@ def checkReplayRepo():
         pass
     
 """
-update the matches_table according to the exising raw replays file
-"""
-def checkRawDownloaded():
-    files = [f for f in os.listdir(tablesManager.REPLAYSPATH)]
-    matches_table = tablesManager.getMatchesTable()
-    matches_table['download_status'] = False
-    for f in files:
-        try:
-            match_id = int(f.split('.')[0])
-            matches_table.at[match_id,'download_status'] = True
-        except:
-            pass
-    tablesManager.setMatchesTable(matches_table)
-
-"""
 See already downloaded matches
 """
 def checkForExistingReplays():
