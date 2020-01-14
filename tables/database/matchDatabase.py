@@ -35,6 +35,15 @@ class MatchDatabase(object):
         self.db_connection.commit()
         cur.close()
 
+
+    """ Gets all matches in the DB. """
+    def find_all(self):
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT * FROM matches m WHERE NOT m.crashed")
+        matches = cur.fetchall()
+        cur.close()
+        return list(map(Match.from_tuple, matches))
+
     
     """ Gets all matches played by a given algo. 
     
@@ -43,7 +52,20 @@ class MatchDatabase(object):
     """
     def find_for_algo(self, algo_id):
         cur = self.db_connection.cursor()
-        cur.execute("SELECT * FROM matches m WHERE m.winner_id=%s OR m.loser_id=%s", (algo_id, algo_id))
+        cur.execute("SELECT * FROM matches m WHERE m.winner_id=%s OR m.loser_id=%s AND NOT m.crashed", (algo_id, algo_id))
+        matches = cur.fetchall()
+        cur.close()
+        return list(map(Match.from_tuple, matches))
+
+
+    """ Gets all matches played by all algos of a given user. 
+    
+    Args :
+        username 
+    """
+    def find_for_user(self, username):
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT m.id, m.winner_id, m.loser_id, m.winner_side FROM matches m, algos a WHERE (m.winner_id=a.id OR m.loser_id=a.id) AND a.username=%s AND NOT m.crashed", (username,))
         matches = cur.fetchall()
         cur.close()
         return list(map(Match.from_tuple, matches))
@@ -56,8 +78,23 @@ class MatchDatabase(object):
     """
     def find_ids_for_algo(self, algo_id):
         cur = self.db_connection.cursor()
-        cur.execute("SELECT id FROM matches m WHERE m.winner_id=%s OR m.loser_id=%s", (algo_id, algo_id))
+        cur.execute("SELECT id FROM matches m WHERE m.winner_id=%s OR m.loser_id=%s AND NOT m.crashed", (algo_id, algo_id))
         matches = cur.fetchall()
         cur.close()
         return list(map(lambda x: x[0], matches))
+
+    
+    """ Updates a match.
+    
+    Args :
+        match // A Match object
+    """
+    def update_match(self, match):
+        cur = self.db_connection.cursor()
+        cur.execute(
+            "UPDATE matches m SET winner_id=%s, loser_id=%s, winner_side=%s, crashed=%s WHERE m.id=%s", 
+            (match.winner_id, match.loser_id, match.winner_side, match.crashed, match.id)
+        )
+        self.db_connection.commit()
+        cur.close()
     

@@ -13,6 +13,7 @@ import json
 from tqdm import tqdm
 import threading
 
+from database import Database
 import tablesManager
 import terminalAPI
 
@@ -66,67 +67,90 @@ def checkRawDownloaded():
         except:
             pass
     tablesManager.setMatchesTable(matches_table)
-    
+
+"""
+See already downloaded matches
+"""
+def checkForExistingReplays():
+    return list(map(lambda f: int(f.split('.')[0]), os.listdir(tablesManager.REPLAYSPATH)))
+
 """
 Downloads a specific match, and add it to the matches table
 """
-def handleMatch(match_id, matches_table, semaphore=None):
-    match_content_b = terminalAPI.getMatchContent(match_id)
-    match_content = str(match_content_b)
+def handleMatch(match, db, semaphore=None, pbar=None):
+    match_content_b = terminalAPI.getMatchContent(match.id)
     has_crashed = True
     try:
         if match_content_b:
-            frames = [json.loads(c) for c in searchDico(match_content)]
+            frames = [json.loads(c) for c in searchDico(str(match_content_b))]
             if(len(frames)):
-                has_crashed = frames[-1]['endStats']['player1']['crashed'] or frames[-1]['endStats']['player2']['crashed']
-                matches_table.at[match_id,'winner_side'] = int(frames[-1]['endStats']['winner'])
+                match.crashed = frames[-1]['endStats']['player1']['crashed'] or frames[-1]['endStats']['player2']['crashed']
+                has_crashed = match.crashed
+                match.winner_side = int(frames[-1]['endStats']['winner'])
+                db.matches.update_match(match)
                 if not(has_crashed):
-                    f = open(f"{tablesManager.REPLAYSPATH}/{match_id}.replay", 'wb')
+                    f = open(f"{tablesManager.REPLAYSPATH}/{match.id}.replay", 'wb')
                     f.write(match_content_b)
                     f.close()
-                    matches_table.at[match_id,"download_status"] = True
     except Exception as e:
         has_crashed = True
         print(f"error for match {match_id} : {e}")
     if has_crashed:
-        matches_table.at[match_id,"has_crashed"] = True
-    tablesManager.setMatchesTable(matches_table)
+        match.crashed = True
+        db.matches.update_match(match)
     if semaphore:
         semaphore.release()
+    if pbar:
+        pbar.update(1)
 
 """
 Download a selection of matches
 if matches_ids is not specified, every match for the matches table will be downloaded
 """
-def downloadMatchesSelection(matches_ids = None):
+def downloadMatchesSelection(matches=None, db=None):
     print('Configuration running, wait please...')
+    if not db:
+        db = Database()
     checkReplayRepo()
-    matches_table = tablesManager.getMatchesTable()
-    if not(matches_ids):
-        matches_ids = list(matches_table.index)
-    downloadable = list(matches_table.loc[(matches_table["download_status"]==False) & (matches_table["has_crashed"]==False)].index)
-    to_download = np.unique(list(set([match_id for match_id in matches_ids if match_id in downloadable])))
-    estimated_download = 1.8 * len(to_download)
 
-    print(f"Warning! You are about to download {len(to_download)} files (estimated size : {estimated_download:.1f} Mo)")
+    if not(matches):
+        matches = db.matches.find_all()
+    existing_replays = checkForExistingReplays()
+    matches_to_download = list(filter(lambda m: m.id not in existing_replays, matches))
+
+    estimated_download_size = 1.8 * len(matches_to_download)
+
+    print(f"Warning! You are about to download {len(matches_to_download)} files (estimated size : {estimated_download_size:.1f} Mo)")
     answer = input("Do you wish to continue? (yes/no): ")
     if('y' in answer.lower()):
         semaphore = threading.Semaphore(value=20)
-        for match_id in tqdm(to_download):
+        pbar = tqdm(desc="Downloading...", total=len(matches_to_download))
+        for match in matches_to_download:
             semaphore.acquire()
             t = threading.Thread(
                 target=handleMatch,
-                args=(match_id, matches_table, semaphore)
+                args=(match, db, semaphore, pbar)
             )
             t.start()
-        print("\nDone !")
 
 """
 Download only the matches of the user Felix (F.Richter)
 """
-def downloadEagle():
-    matches_id = list(np.unique(tablesManager.getMatchId("F.Richter") + tablesManager.getMatchId("Felix")))
-    downloadMatchesSelection(matches_id)
+def downloadEagle(algos=None, users=["F.Richter", "Felix"]):
+    db = Database()
+    matches = []
+    if not algos:
+        for user in users:
+            matches += db.matches.find_for_user(user)
+        print(f"Found {len(matches)} matches for users {''.join([user + ' & ' for user in users])[:-3]}")
+        
+    else:
+        for algo in algos:
+            matches += db.matches.find_for_algo(algo)
+        print(f"Found {len(matches)} matches for algos {''.join([str(algo) + ', ' for algo in algos])[:-2]}")
+
+    # matches_id = list(np.unique(tablesManager.getMatchId("F.Richter") + tablesManager.getMatchId("Felix")))
+    downloadMatchesSelection(matches, db) 
 
 if __name__ == '__main__':
-    downloadEagle()
+    downloadEagle([101365, 101102])

@@ -17,11 +17,9 @@ from tqdm import tqdm
 try:
     from .terminalAPI import getAlgoIdLeaderBoard,getLastMatches
     from .database import Database
-    from .timer import Timer
 except ImportError:
     from terminalAPI import getAlgoIdLeaderBoard,getLastMatches
     from database import Database
-    from timer import Timer
 
 
 """
