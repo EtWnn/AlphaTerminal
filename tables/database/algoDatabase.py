@@ -58,3 +58,17 @@ class AlgoDatabase(object):
         algos = cur.fetchall()
         cur.close()
         return list(map(Algo.from_tuple, algos))
+
+    """ Gets all algo ids for a given user
+    
+    Args :
+        username // The name of the user whose algos you search
+    returns:
+        int[] // A list of algo ids
+    """
+    def find_all_ids_for_user(self, username):
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT id FROM algos a WHERE a.username=%s", (username,))
+        algos = cur.fetchall()
+        cur.close()
+        return list(map(lambda x: x[0], algos))

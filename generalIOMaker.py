@@ -127,12 +127,12 @@ compute the general IO for the eagle algo serie, if no ids is given, takes all o
 def computeEagle(algo_ids = []):
     db = Database()
 
-    eagle_algos = db.algos.find_all_for_user("Felix") + db.algos.find_all_for_user("F.Richter")
+    eagle_algos = db.algos.find_all_ids_for_user("Felix") + db.algos.find_all_ids_for_user("F.Richter")
     if(algo_ids == []):
         algo_ids = eagle_algos
     else:
         algo_ids = [algo_id for algo_id in algo_ids if algo_id in eagle_algos]
-    
+
     matches = []
     for algo_id in algo_ids:
         matches += db.matches.find_for_algo(algo_id)
@@ -157,4 +157,4 @@ def computeEagle(algo_ids = []):
     generalIOMaker.compute(to_compute)
 
 if __name__ == '__main__':
-    computeEagle([99748])
+    computeEagle([101522])

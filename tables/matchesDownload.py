@@ -137,4 +137,4 @@ def downloadEagle(algos=None, users=["F.Richter", "Felix"]):
     downloadMatchesSelection(matches, db) 
 
 if __name__ == '__main__':
-    downloadEagle([101365, 101102])
+    downloadEagle([101522, 101102])
