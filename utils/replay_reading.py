@@ -47,7 +47,7 @@ def searchDico(string):
 fetch the replay file and return the string content
 """
 def getMatchContent(match_id, flip = False):
-    file_path = pathlib.Path(__file__).parent.parent / 'raw_replays/{}.replay'.format(match_id)
+    file_path = pathlib.Path(__file__).parent.parent / f'raw_replays/{match_id}.replay'
     with open(file_path) as f:
         content = f.read()
     if flip:

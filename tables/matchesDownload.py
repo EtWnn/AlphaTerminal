@@ -134,7 +134,6 @@ def downloadEagle(algos=None, users=["F.Richter", "Felix"]):
             matches += db.matches.find_for_algo(algo)
         print(f"Found {len(matches)} matches for algos {''.join([str(algo) + ', ' for algo in algos])[:-2]}")
 
-    # matches_id = list(np.unique(tablesManager.getMatchId("F.Richter") + tablesManager.getMatchId("Felix")))
     downloadMatchesSelection(matches, db) 
 
 if __name__ == '__main__':
