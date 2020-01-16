@@ -5,6 +5,7 @@ datasets/
 
 # Credentials
 tables/credentials
+.env
 
 # Python generated files
 __pycache__/

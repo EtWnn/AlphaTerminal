@@ -10,9 +10,9 @@ import numpy as np
 from tqdm import tqdm
 
 import generalIOLib
+from tables.database import Database
 from utils.config import CONFIG
 from utils.replay_reading import getDownloadedMatchIds, getMatchFrames
-from tables.tablesManager import getMatchesTable, getAlgosId, getMatchId
 from generalBDDHandler import GeneralBDDHandler
 
 """
@@ -24,7 +24,6 @@ def convertStability(unit_type, remaining_stability):
 class GeneralIOMaker:
     
     def __init__(self):
-               
         self.flatInputDic = generalIOLib.FlatInputDic()
         self.matrixInput = generalIOLib.MatrixInput()
         
@@ -126,35 +125,36 @@ class GeneralIOMaker:
 compute the general IO for the eagle algo serie, if no ids is given, takes all of them
 """
 def computeEagle(algo_ids = []):
-    eagle_algos = list(np.unique(getAlgosId("F.Richter") + getAlgosId("Felix")))
+    db = Database()
+
+    eagle_algos = db.algos.find_all_ids_for_user("Felix") + db.algos.find_all_ids_for_user("F.Richter")
     if(algo_ids == []):
         algo_ids = eagle_algos
     else:
         algo_ids = [algo_id for algo_id in algo_ids if algo_id in eagle_algos]
-    
-    match_ids = []
+
+    matches = []
     for algo_id in algo_ids:
-        match_ids = match_ids + getMatchId(algo = algo_id)
-    
-    matches_table = getMatchesTable()
-    
+        matches += db.matches.find_for_algo(algo_id)
+
     to_compute = []
-    for match_id in match_ids:
-        winner_id, loser_id, winner_side = matches_table.loc[match_id][['winner_id','loser_id','winner_side']]
+    for match in matches:
+        winner_id, loser_id, winner_side = match.winner_id, match.loser_id, match.winner_side
         eagle_id = winner_id if winner_id in eagle_algos else loser_id
+
         try:
             assert(eagle_id in eagle_algos)
         except AssertionError as e:
             print(match_id, winner_id, loser_id, winner_side, eagle_id)
+
         eagle_side = winner_side if winner_id in eagle_algos else 3 - winner_side
         flip = False
         if eagle_side == 2:
             flip = True
-        to_compute.append((match_id, flip))
-        
+        to_compute.append((match.id, flip))
     
     generalIOMaker = GeneralIOMaker()
     generalIOMaker.compute(to_compute)
 
 if __name__ == '__main__':
-    computeEagle([99748])
+    computeEagle([101522])

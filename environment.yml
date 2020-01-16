@@ -15,6 +15,7 @@ dependencies:
   - certifi=2019.11.28=py37_0
   - cffi=1.13.2=py37h33e799b_0
   - chardet=3.0.4=py37_1003
+  - click=7.0=py_0
   - cryptography=2.8=py37hafa8578_1
   - cycler=0.10.0=py_2
   - dbus=1.13.6=h2f22bb5_0
@@ -27,6 +28,7 @@ dependencies:
   - gettext=0.19.8.1=h46ab8bc_1002
   - glib=2.58.3=py37h577aef8_1002
   - google-pasta=0.1.8=py_0
+  - graphviz=2.42.3=h98dfb87_0
   - grpcio=1.23.0=py37h8a88325_0
   - h5py=2.10.0=nompi_py37h106b333_101
   - hdf5=1.10.5=nompi_h3e39495_1104
@@ -41,18 +43,23 @@ dependencies:
   - jinja2=2.10.3=py_0
   - joblib=0.14.1=py_0
   - jpeg=9c=h1de35cc_1001
+  - json5=0.8.5=py_0
   - jsonschema=3.2.0=py37_0
   - jupyter=1.0.0=py_2
   - jupyter_client=5.3.3=py37_1
   - jupyter_console=6.0.0=py_0
   - jupyter_core=4.6.1=py37_0
+  - jupyterlab=1.2.4=py_0
+  - jupyterlab_server=1.0.6=py_0
   - keras-applications=1.0.8=py_1
   - keras-preprocessing=1.1.0=py_0
   - kiwisolver=1.1.0=py37ha1b3eb9_0
+  - krb5=1.16.4=h1752a42_0
   - libblas=3.8.0=14_openblas
   - libcblas=3.8.0=14_openblas
   - libclang=8.0.1=h770b8ee_1
   - libcxx=9.0.0=h89e68fa_1
+  - libedit=3.1.20170329=hcfe32e1_1001
   - libffi=3.2.1=h6de7cb9_1006
   - libgfortran=4.0.0=2
   - libiconv=1.15=h01d97ff_1005
@@ -60,9 +67,12 @@ dependencies:
   - libllvm8=8.0.1=h770b8ee_0
   - libopenblas=0.3.7=h3d69b6c_6
   - libpng=1.6.37=h2573ce8_0
+  - libpq=11.5=h31a01ba_2
   - libprotobuf=3.11.2=hd174df1_0
   - libsodium=1.0.17=h01d97ff_0
+  - libtiff=4.1.0=ha78913b_3
   - llvm-openmp=9.0.0=h40edb58_0
+  - lz4-c=1.8.3=h6de7cb9_1001
   - markdown=3.1.1=py_0
   - markupsafe=1.1.1=py37h0b31af3_0
   - matplotlib=3.1.2=py37_1
@@ -89,8 +99,10 @@ dependencies:
   - prometheus_client=0.7.1=py_0
   - prompt_toolkit=2.0.10=py_0
   - protobuf=3.11.2=py37h4a8c4bd_0
+  - psycopg2=2.8.4=py37hafa8578_0
   - ptyprocess=0.6.0=py_1001
   - pycparser=2.19=py37_1
+  - pydot=1.4.1=py37_1001
   - pygments=2.5.2=py_0
   - pyopenssl=19.1.0=py37_0
   - pyparsing=2.4.6=py_0
@@ -99,6 +111,7 @@ dependencies:
   - pysocks=1.7.1=py37_0
   - python=3.7.6=h5c2c468_1
   - python-dateutil=2.8.1=py_0
+  - python-dotenv=0.10.3=py_0
   - pytz=2019.3=py_0
   - pyzmq=18.1.1=py37h4bf09a9_0
   - qt=5.12.5=h1b46049_0
@@ -133,7 +146,9 @@ dependencies:
   - zeromq=4.3.2=h6de7cb9_2
   - zipp=0.6.0=py_0
   - zlib=1.2.11=h0b31af3_1006
+  - zstd=1.4.4=he7fca8b_1
   - pip:
     - pyqt5-sip==4.19.18
     - pyqtwebengine==5.12.1
+    - python-graphviz==0.13.2
 
