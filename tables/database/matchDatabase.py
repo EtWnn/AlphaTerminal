@@ -29,8 +29,8 @@ class MatchDatabase(object):
         cur = self.db_connection.cursor()
         execute_values(
             cur,
-            "INSERT INTO matches (id, winner_id, loser_id, winner_side) VALUES %s",
-            map(lambda x: x if len(x) == 4 else (x[0], x[1], x[2], None), matches)
+            "INSERT INTO matches (id, winner_id, loser_id, winner_side, date) VALUES %s",
+            map(lambda x: x if len(x) == 5 else (x[0], x[1], x[2], None, x[3]), matches)
         )
         self.db_connection.commit()
         cur.close()
@@ -60,12 +60,12 @@ class MatchDatabase(object):
 
     """ Gets all matches played by all algos of a given user. 
     
-    Args :
+    Arg
         username 
     """
     def find_for_user(self, username):
         cur = self.db_connection.cursor()
-        cur.execute("SELECT m.id, m.winner_id, m.loser_id, m.winner_side FROM matches m, algos a WHERE (m.winner_id=a.id OR m.loser_id=a.id) AND a.username=%s AND NOT m.crashed", (username,))
+        cur.execute("SELECT m.* FROM matches m, algos a WHERE (m.winner_id=a.id OR m.loser_id=a.id) AND a.username=%s AND NOT m.crashed", (username,))
         matches = cur.fetchall()
         cur.close()
         return list(map(Match.from_tuple, matches))
@@ -92,8 +92,8 @@ class MatchDatabase(object):
     def update_match(self, match):
         cur = self.db_connection.cursor()
         cur.execute(
-            "UPDATE matches m SET winner_id=%s, loser_id=%s, winner_side=%s, crashed=%s WHERE m.id=%s", 
-            (match.winner_id, match.loser_id, match.winner_side, match.crashed, match.id)
+            "UPDATE matches m SET winner_id=%s, loser_id=%s, winner_side=%s, crashed=%s, date=%s WHERE m.id=%s", 
+            (match.winner_id, match.loser_id, match.winner_side, match.crashed, match.date, match.id)
         )
         self.db_connection.commit()
         cur.close()

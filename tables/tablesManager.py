@@ -115,7 +115,6 @@ min_date has to be a string under the format "YYYY-MM-DD"
 if min_date is specified then max_days_delta is ignored
 """
 def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_days_delta = 10, verbose = None):
-    
     if(starting_ids == None):
         starting_ids = [algo['id'] for algo in getAlgoIdLeaderBoard()]
     if(min_rating == None):
@@ -140,6 +139,7 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
 
     updated_algos = []
     to_update = list(starting_ids)
+
     # Initiate a progress bar
     pbar = tqdm(desc="Updating...", total=len(to_update))
     while to_update:
@@ -159,7 +159,7 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
             #we update the algos_table
             if not(algo_id in algos_table):
                 algos_table.append(algo_id)
-                algos_to_add.append((algo_id, algo['name'], user, algo['rating']))
+            algos_to_add.append((algo_id, algo['name'], user, algo['rating']))
 
             matches_for_algo = db.matches.find_ids_for_algo(algo_id)
             for match in matches:
@@ -167,7 +167,7 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
 
                 if match_id not in matches_for_algo:
                     if match_id not in added_match_ids:
-                        matches_to_add.append((match_id, match['winning_algo']['id'],match['losing_algo']['id']))
+                        matches_to_add.append((match_id, match['winning_algo']['id'],match['losing_algo']['id'], match['date']))
                         added_match_ids.append(match_id)
 
                     opponent = match['winning_algo'] if match['winning_algo']['id'] != algo_id else match['losing_algo']
@@ -191,7 +191,6 @@ def updateTables(starting_ids = None, min_rating = 2000, min_date = None, max_da
                         users_to_add.append(opponent['user'])
 
         pbar.update(1)
-
 
 
     db.users.insert_many(users_to_add)
@@ -225,11 +224,11 @@ if __name__ == "__main__":
     parser.add_argument('-ids', '--startingIds', metavar="<starting_ids>", required=False,
                         help='if starting_ids is not specified, the 10 best algos will be taken from the leaderboard')
     parser.add_argument('-mr', '--minRating', metavar="<min_rating>", required=False,
-                        help='minimum rating of algo to look at (default 2000)')
+                        help='minimum rating of algo to look at (default 2000)', type=int)
     parser.add_argument('-md', '--minDate', metavar="<min_date>", required=False,
                         help='start date to search for (default today-max_days_delta)')
     parser.add_argument('-mdd', '--maxDaysDelta', metavar="<max_days_delta>", required=False,
-                        help='max number of days to look at (default 10)')
+                        help='max number of days to look at (default 10)', type=int)
     args = parser.parse_args()
 
     if args.reset:
@@ -240,7 +239,7 @@ if __name__ == "__main__":
         exit()
 
     updateTables(
-        starting_ids=args.startingIds, 
+        starting_ids= [100591,101000,100618,101059,100610,100683,100750,100630,100616,101078], 
         min_rating=args.minRating,
         min_date=args.minDate,
         max_days_delta=args.maxDaysDelta,

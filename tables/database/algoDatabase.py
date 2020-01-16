@@ -13,24 +13,6 @@ class AlgoDatabase(object):
     def __init__(self, db_conn):
         self.db_connection = db_conn
 
-    """ Insert multiple algos.
-    
-    Args :
-        algos = [(id, name, username, rating), (101024, "EAGLE_AS1", "Felix", 2307)] // List of tuples of algos
-    """
-    def insert_many(self, algos):
-        if len(algos) == 0:
-            return
-
-        cur = self.db_connection.cursor()
-        execute_values(
-            cur,
-            "INSERT INTO algos (id, name, username, rating) VALUES %s",
-            algos
-        )
-        self.db_connection.commit()
-        cur.close()
-    
 
     """ Gets all IDS of algos in the database. 
     
@@ -59,6 +41,32 @@ class AlgoDatabase(object):
         cur.close()
         return list(map(Algo.from_tuple, algos))
 
+
+    """ Gets a given set of algos by IDs.
+    
+    Args :
+        algo_ids: int[] // A list of algo ids
+    returns:
+        Algo[] // A list of Algo objects
+    """
+    def find_all_by_ids(self, algo_ids):
+        if len(algo_ids) == 0:
+            return
+
+        if not isinstance(algo_ids[0], tuple):
+            algo_ids = list(map(lambda x: (x, ), algo_ids))
+        
+        cur = self.db_connection.cursor()
+        execute_values(
+            cur, 
+            "SELECT * FROM algos a WHERE a.id IN %s", 
+            (algo_ids,)
+        )
+        algos = cur.fetchall()
+        cur.close()
+        return list(map(Algo.from_tuple, algos))
+
+
     """ Gets all algo ids for a given user
     
     Args :
@@ -72,3 +80,39 @@ class AlgoDatabase(object):
         algos = cur.fetchall()
         cur.close()
         return list(map(lambda x: x[0], algos))
+
+    
+    """ Insert multiple algos.
+    
+    Args :
+        algos = [(id, name, username, rating), (101024, "EAGLE_AS1", "Felix", 2307)] // List of tuples of algos
+    """
+    def insert_many(self, algos):
+        if len(algos) == 0:
+            return
+
+        algo_ids = list(map(lambda a: a[0], algos))
+
+        algos_in_db = self.find_all_by_ids(algo_ids)
+        algos_in_db_ids = list(map(lambda a: a.id, algos_in_db))
+
+        algos_to_add = [algo for algo in algos if algo[0] not in algos_in_db_ids]
+        algos_to_update = [algo for algo in algos if algo[0] in algos_in_db_ids]
+
+
+        cur = self.db_connection.cursor()
+        execute_values(
+            cur,
+            "INSERT INTO algos (id, name, username, rating) VALUES %s",
+            algos_to_add
+        )
+
+        execute_values(
+            cur, 
+            "UPDATE algos SET rating=up.rating FROM (VALUES %s) as up(id, name, username, rating) WHERE algos.id=up.id",
+            algos_to_update
+        )
+        self.db_connection.commit()
+        cur.close()
+    
+
