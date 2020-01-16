@@ -239,7 +239,7 @@ if __name__ == "__main__":
         exit()
 
     updateTables(
-        starting_ids= [100591,101000,100618,101059,100610,100683,100750,100630,100616,101078], 
+        starting_ids= args.startingIds, 
         min_rating=args.minRating,
         min_date=args.minDate,
         max_days_delta=args.maxDaysDelta,
