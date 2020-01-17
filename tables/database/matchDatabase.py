@@ -44,6 +44,15 @@ class MatchDatabase(object):
         cur.close()
         return list(map(Match.from_tuple, matches))
 
+
+    """ Gets all match ids in the DB. """
+    def find_all_ids(self):
+        cur = self.db_connection.cursor()
+        cur.execute("SELECT id FROM matches m WHERE NOT m.crashed")
+        matches = cur.fetchall()
+        cur.close()
+        return list(map(lambda x: x[0], matches))
+
     
     """ Gets all matches played by a given algo. 
     
