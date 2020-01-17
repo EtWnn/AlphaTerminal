@@ -57,7 +57,11 @@ def checkReplayRepo():
 See already downloaded matches
 """
 def checkForExistingReplays():
-    return list(map(lambda f: int(f.split('.')[0]), os.listdir(tablesManager.REPLAYSPATH)))
+    result = []
+    for f in os.listdir(tablesManager.REPLAYSPATH):
+        if f[0] != '.':
+            result.append(int(f.split('.')[0]))
+    return result
 
 """
 Downloads a specific match, and add it to the matches table
@@ -137,4 +141,4 @@ def downloadEagle(algos=None, users=["F.Richter", "Felix"]):
     downloadMatchesSelection(matches, db) 
 
 if __name__ == '__main__':
-    downloadEagle([101522, 101102])
+    downloadEagle([101522, 100750, 100630, 100616, 100768, 100633])

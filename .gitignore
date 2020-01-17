@@ -10,3 +10,6 @@ tables/credentials
 # Python generated files
 __pycache__/
 .ipynb_checkpoints
+
+# MacOS stupid files
+.DS_Store
