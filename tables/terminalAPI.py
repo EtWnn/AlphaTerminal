@@ -55,7 +55,7 @@ def getLastMatches(algo_id):
         content = json.loads(r.content)
         return content['data']['matches']
     else:
-tqdm.write('connection error',r.status_code,'for algo',algo_id, 'url', url)
+        tqdm.write('connection error',r.status_code,'for algo',algo_id, 'url', url)
 
 
 """
@@ -64,7 +64,7 @@ return the info on an algo using getLastMatches
 def getAlgoInfo(algo_id):
     matches = getLastMatches(algo_id)
     if len(matches) == 0:
-        raise Error(f"No matches for algo {algo_id}")
+        raise ValueError(f"No matches for algo {algo_id}")
     last_match = matches[0]
     algo = last_match['winning_algo'] if last_match['winning_algo']['id'] == algo_id else last_match['losing_algo']
     return (algo_id, algo['name'], algo['user'], algo['rating'])

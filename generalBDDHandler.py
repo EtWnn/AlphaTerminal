@@ -60,6 +60,17 @@ class GeneralBDDHandler:
                 row = [match_id, flipped, str(units_list)] + flat_inputs + [output]
                 row = ";".join(map(str,row)) + "\n"
                 f.write(row)
+                
+    """
+    convert the units_list from str to tuple of tuples  
+    """          
+    def convertUnitsList(self, units_list_str):
+        units_list = []
+        search = re.findall(r"\((\d+), (\d+), (\d+), (\d+\.*\d*)\)", units_list_str)
+        for x,y,unit_type, stability in search:
+            units_list.append((int(x), int(y), int(unit_type), float(stability)))
+        return tuple(units_list)
+        
     
     """
     return a set of images

@@ -53,4 +53,4 @@ class FlatInputDic:
         self.index += 1
         
 def outputFormat(spawn):
-    return "{}_{}_{}".format(spawn[2],spawn[0], spawn[1])
+    return "{}_{}_{}".format(spawn[0],spawn[1], spawn[2]) # "x_y_unit_type"
