@@ -58,8 +58,7 @@ def getLastMatches(algo_id):
 
 
 """
-return a list of dictionnary, each dictionnary is the desciption a match
-at best, it will return the 100 last matches of an algo
+return the info on an algo using getLastMatches
 """
 def getAlgoInfo(algo_id):
     matches = getLastMatches(algo_id)
