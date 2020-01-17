@@ -97,6 +97,38 @@ class GeneralIOMaker:
             
 
 """
+compute the general IO for a list of matches, if no ids is given, takes all of them
+Only compute the winner side!
+"""
+def computeWinner(algo_ids = []):    
+    db = Database()
+    gbdd = GeneralBDDHandler()
+    existing_replays = getDownloadedMatchIds()
+    already_computed = gbdd.getAlreadyComputed()
+    
+    matches = []
+    if(algo_ids != []):
+        for algo_id in algo_ids:
+            matches += db.matches.find_for_algo(algo_id)
+    else:
+        matches = db.matches.find_all()
+        
+    matches = filter(lambda x:x.id in existing_replays, matches)
+    
+    to_compute = []
+    empty_winner = 0
+    for match in matches:
+        winner_id, loser_id, winner_side = match.winner_id, match.loser_id, match.winner_side
+        if winner_side != -1:
+            flip = (winner_side == 2)
+            to_compute.append((match.id, flip))
+        else:
+            empty_winner += 1
+    
+    generalIOMaker = GeneralIOMaker()
+    generalIOMaker.compute(to_compute)
+
+"""
 compute the general IO for the eagle algo serie, if no ids is given, takes all of them
 """
 def computeEagle(algo_ids = []):
@@ -134,4 +166,4 @@ def computeEagle(algo_ids = []):
     generalIOMaker.compute(to_compute)
 
 if __name__ == '__main__':
-    computeEagle([101522])
+    computeWinner([101522])
