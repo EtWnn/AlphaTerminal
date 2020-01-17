@@ -16,6 +16,7 @@ from utils.flip_replay import flip_content
 from utils.config import getTiles
 from utils.replay_reading import getDownloadedMatchIds
 from tables.database import Database
+from tables.matchesDownload import checkForExistingReplays
 import matplotlib.pyplot as plt
 import pickle
 
@@ -91,21 +92,20 @@ def getLocationsUsed():
     downloaded_match_ids = getDownloadedMatchIds()
     downloaded_eagle_matches = [match for match in eagle_matches if match.id in downloaded_match_ids]
 
-    matches_ids = matches_table.loc[matches_table.index.isin(eagle_matches) & matches_table['download_status'] == True].index
     loc_used = {eagle_id:[set() for unit_type in range(7)] for eagle_id in eagle_algos}
     
     for compt,match in enumerate(tqdm(downloaded_eagle_matches)):
         winner_id, loser_id, winner_side = match.winner_id, match.loser_id, match.winner_side
         if (not winner_side):#uninitialised
-            winner_side, has_crashed = getWinnerSide(match_id)
-            match.winner_side, match.crashed = winner_side, as_crashed
+            winner_side, has_crashed = getWinnerSide(match.id)
+            match.winner_side, match.crashed = winner_side, has_crashed
             db.matches.update_match(match)
 
         eagle_id = winner_id if winner_id in eagle_algos else loser_id
         try:
             assert(eagle_id in eagle_algos)
         except AssertionError as e:
-            print(match_id, winner_id, loser_id, winner_side, eagle_id)
+            print(match.id, winner_id, loser_id, winner_side, eagle_id)
             raise e
 
         with open('raw_replays/{}.replay'.format(match.id)) as f:
@@ -120,7 +120,6 @@ def getLocationsUsed():
             spawns = getSpawns(match_frames)
             for x,y,unit_type in spawns:
                 loc_used[eagle_id][unit_type].add((x,y))
-    
     return loc_used
 
 """

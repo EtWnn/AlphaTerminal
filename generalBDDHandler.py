@@ -6,14 +6,13 @@ Created on Wed Dec 25 15:44:01 2019
 @author: etiennew
 """
 
-
 import re
 import os
 import pandas as pd
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import pathlib
 
 import generalIOLib
 from utils.config import getTiles, CONFIG
@@ -33,76 +32,34 @@ class GeneralBDDHandler:
     def __init__(self):
         
         self.bdd_name = "generalIO_v2"
-        self.bdd_path = 'datasets/' + self.bdd_name + '.pkl'
+        self.bdd_path = pathlib.Path(__file__).parent / 'datasets' / (self.bdd_name + '.csv')
         
         self.matrixInputs = generalIOLib.MatrixInput()
         self.flatInputsDic = generalIOLib.FlatInputDic()
         
-        self.bdd = self.getBDD()
-    
-    """
-    return a previously saved version of the bdd or create one if none exist
-    """
-    def getBDD(self):
-        try:
-            bdd = pd.read_pickle(self.bdd_path)
-        except FileNotFoundError:
-            bdd = pd.DataFrame(columns = ['match_id','flipped', 'image_units'] + self.flatInputsDic.column_names + ['output'])
-        return bdd
-    
-    """
-    pickle the bdd
-    """
-    def setbdd(self, bdd):
-        bdd.to_pickle(self.bdd_path)
+        if not os.path.exists(self.bdd_path):
+            with open(self.bdd_path, "w") as f:
+                headers = ";".join(["match_id","flipped","units_list"] + self.flatInputsDic.column_names + ["output"]) + "\n"
+                f.write(headers)
+        
         
     """
     return the tuples(match_id, flipped) already in the bdd
     """
     def getAlreadyComputed(self):
-        return set(zip(self.bdd['match_id'],self.bdd['flipped']))
-    
-    """
-    add rows to the bdd
-    """
-    def addRows2(self, match_id, flipped, image_units_list, flat_inputs, outputs):
-
-        dico  = {}
-        
-        dico['match_id'] = len(outputs) * [match_id]
-        dico['flipped'] = len(outputs) * [flipped]
-        dico['image_units'] = image_units_list
-        
-        flat_inputs = np.array(flat_inputs)
-        for i, col_name in enumerate(self.flatInputsDic.column_names):
-            dico[col_name] = flat_inputs[:,i]
-            
-        dico['output'] = outputs
-        
-        new_df = pd.DataFrame(dico)
-        self.bdd = pd.concat([self.bdd, new_df])
-        self.setbdd(self.bdd)
+        df = pd.read_csv(self.bdd_path, usecols = ['match_id','flipped'], delimiter = ";")
+        return set(zip(df['match_id'],df['flipped']))
     
     """
     add rows to the bdd
     """
     def addRows(self, match_id, flipped, image_units_list, flat_inputs, outputs):
-
-        dico  = {}
         
-        dico['match_id'] = len(outputs) * [match_id]
-        dico['flipped'] = len(outputs) * [flipped]
-        dico['image_units'] = image_units_list
-        
-        flat_inputs = np.array(flat_inputs)
-        for i, col_name in enumerate(self.flatInputsDic.column_names):
-            dico[col_name] = flat_inputs[:,i]
-            
-        dico['output'] = outputs
-        
-        new_df = pd.DataFrame(dico)
-        self.bdd = pd.concat([self.bdd, new_df])
-        self.setbdd(self.bdd)
+        with open(self.bdd_path, "a") as f:
+            for units_list, flat_inputs, output in zip(image_units_list, flat_inputs, outputs):
+                row = [match_id, flipped, str(units_list)] + flat_inputs + [output]
+                row = ";".join(map(str,row)) + "\n"
+                f.write(row)
     
     """
     return a set of images

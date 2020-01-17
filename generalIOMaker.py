@@ -113,6 +113,8 @@ def computeEagle(algo_ids = []):
         matches += db.matches.find_for_algo(algo_id)
 
     to_compute = []
+    existing_replays = getDownloadedMatchIds()
+    matches = filter(lambda x:x.id in existing_replays, matches)
     for match in matches:
         winner_id, loser_id, winner_side = match.winner_id, match.loser_id, match.winner_side
         eagle_id = winner_id if winner_id in eagle_algos else loser_id
@@ -120,7 +122,7 @@ def computeEagle(algo_ids = []):
         try:
             assert(eagle_id in eagle_algos)
         except AssertionError as e:
-            print(match_id, winner_id, loser_id, winner_side, eagle_id)
+            print(match.id, winner_id, loser_id, winner_side, eagle_id)
 
         eagle_side = winner_side if winner_id in eagle_algos else 3 - winner_side
         flip = False
