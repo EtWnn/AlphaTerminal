@@ -83,7 +83,7 @@ def handleMatch(match, db, semaphore=None, pbar=None):
                     f.close()
     except Exception as e:
         has_crashed = True
-        print(f"error for match {match_id} : {e}")
+        pbar.write(f"error for match {match.id} : {e}")
     if has_crashed:
         match.crashed = True
         db.matches.update_match(match)
@@ -113,7 +113,7 @@ def downloadMatchesSelection(matches=None, db=None):
     answer = input("Do you wish to continue? (yes/no): ")
     if('y' in answer.lower()):
         semaphore = threading.Semaphore(value=20)
-        pbar = tqdm(desc="Downloading...", total=len(matches_to_download))
+        pbar = tqdm(desc="Downloading...", total=len(matches_to_download), leave=False)
         for match in matches_to_download:
             semaphore.acquire()
             t = threading.Thread(

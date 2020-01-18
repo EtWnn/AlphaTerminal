@@ -10,6 +10,7 @@ import requests
 import json
 import urllib3
 import pathlib
+from tqdm import tqdm
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -17,7 +18,7 @@ try:
     with open(pathlib.Path(__file__).parent / "credentials") as f:
         credentials = json.load(f)
 except FileNotFoundError:
-    print("please fill the credentials file and reload this script")
+    tqdm.write("please fill the credentials file and reload this script")
     with open(pathlib.Path(__file__).parent / "credentials",'w') as f:
         f.write('{\n\t"username":"",\n\t"password":""\n}\n')
     
@@ -38,7 +39,7 @@ def getAlgoIdLeaderBoard(start_page = 1,end_page = 2):
             for a in algos:
                 algo_ids.append({k:a[k] for k in ['id','rating','name','user']})
         else:
-            print('connection error',r.status_code,'for page',i)
+            tqdm.write('connection error',r.status_code,'for page',i)
     return algo_ids
 
 
@@ -54,7 +55,7 @@ def getLastMatches(algo_id):
         content = json.loads(r.content)
         return content['data']['matches']
     else:
-        print('connection error',r.status_code,'for algo',algo_id, 'url', url)
+        tqdm.write('connection error',r.status_code,'for algo',algo_id, 'url', url)
 
 
 """
@@ -63,7 +64,7 @@ return the info on an algo using getLastMatches
 def getAlgoInfo(algo_id):
     matches = getLastMatches(algo_id)
     if len(matches) == 0:
-        raise Error(f"No matches for algo {algo_id}")
+        raise ValueError(f"No matches for algo {algo_id}")
     last_match = matches[0]
     algo = last_match['winning_algo'] if last_match['winning_algo']['id'] == algo_id else last_match['losing_algo']
     return (algo_id, algo['name'], algo['user'], algo['rating'])
@@ -80,6 +81,6 @@ def getMatchContent(match_id):
         content = r.content
         return content
     except Exception as e:
-        print("\nerror trying to download match",match_id,":",e)
+        tqdm.write("\nerror trying to download match",match_id,":",e)
     return None
 
