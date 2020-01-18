@@ -114,13 +114,15 @@ def downloadMatchesSelection(matches=None, db=None):
     if('y' in answer.lower()):
         semaphore = threading.Semaphore(value=20)
         pbar = tqdm(desc="Downloading...", total=len(matches_to_download), leave=False)
-        for match in matches_to_download:
+        for idx, match in enumerate(matches_to_download):
             semaphore.acquire()
             t = threading.Thread(
                 target=handleMatch,
                 args=(match, db, semaphore, pbar)
             )
             t.start()
+            if idx == len(matches_to_download)-1:
+                t.join()
 
 """
 Download only the matches of the user Felix (F.Richter)

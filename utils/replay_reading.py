@@ -78,5 +78,6 @@ def getDownloadedMatchIds():
     file_list = os.listdir(pathlib.Path(__file__).parent.parent / 'raw_replays/')
     id_list = []
     for f in file_list:
-        id_list.append(int(f.split('.replay')[0]))
+        if 'replay' in f:
+            id_list.append(int(f.split('.replay')[0]))
     return id_list
