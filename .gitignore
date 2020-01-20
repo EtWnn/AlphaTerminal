@@ -1,8 +1,9 @@
 # Data
+
 cnn_images/
 raw_replays/
-datasets/
-!/datasets/BatchGenerator.py
+datasets/*.csv
+datasets/*.pkl
 
 # Credentials
 tables/credentials
