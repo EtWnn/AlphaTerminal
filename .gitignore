@@ -2,6 +2,7 @@
 cnn_images/
 raw_replays/
 datasets/
+!/datasets/BatchGenerator.py
 
 # Credentials
 tables/credentials
