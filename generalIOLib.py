@@ -96,12 +96,13 @@ class GeneralOutputLib:
         self.index = 0
         
         for x,y in getTiles():
-            for unit_type in range(3):
-                self.append("{}_{}_{}".format(x,y,unit_type))
-            if isOnEdge(x,y):
-                for unit_type in range(3,6):
+            if(y < 14):
+                for unit_type in range(3):
                     self.append("{}_{}_{}".format(x,y,unit_type))
-            self.append("{}_{}_{}".format(x,y,6))
+                if isOnEdge(x,y):
+                    for unit_type in range(3,6):
+                        self.append("{}_{}_{}".format(x,y,unit_type))
+                self.append("{}_{}_{}".format(x,y,6))
             
         self.append("stop")
     

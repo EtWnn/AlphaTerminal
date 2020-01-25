@@ -37,25 +37,21 @@ class BatchGenerator:
     itterator that yields batches, it prefetch the next batch with thread system
     """
     def getBatches(self):
-        pool = Pool(processes=2)  
-        current_result = 0
-        async_results = [None, None]
+        pool = Pool(processes=1)  
+        async_results = None
         self.end_file = False
         self.current_line = 1 #skip the headers line
-        async_results[0] = pool.apply_async(self._constructAsync)
-        while not(async_results[0].ready()): #wait for the first result to be finished
-            time.sleep(0.1)
+        async_results = pool.apply_async(self._constructAsync)
         
         while True:
             try:
-                flat_inputs, images, output_vecs, lines_read = async_results[current_result].get()
+                flat_inputs, images, output_vecs, lines_read = async_results.get()
                 self.current_line += lines_read
-                async_results[1 - current_result] = pool.apply_async(self._constructAsync)
+                async_results = pool.apply_async(self._constructAsync)
                 yield flat_inputs, images, output_vecs
-                current_result = 1 - current_result
             except StopIteration:
                 break
-    
+        pool.close()
     """
     convert a row (tuple of strings) into flat_inputs, image, output vector
     """
