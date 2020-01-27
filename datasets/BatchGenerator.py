@@ -45,10 +45,11 @@ class BatchGenerator:
         
         while True:
             try:
-                flat_inputs, images, output_vecs, lines_read = async_results.get()
+                flat_inputs, images, output_vecs, lines_read, time_spent = async_results.get()
+                infos = {'loading_time': time_spent, 'n_features': lines_read}
                 self.current_line += lines_read
                 async_results = pool.apply_async(self._constructAsync)
-                yield flat_inputs, images, output_vecs
+                yield ((flat_inputs, images), output_vecs), infos
             except StopIteration:
                 break
         pool.close()
@@ -63,7 +64,7 @@ class BatchGenerator:
             units_list.append((int(x), int(y), int(unit_type), float(stability)))
         image = self.generalBDDHandler.getImage(units_list)
         
-        flat_input = np.asarray(row[3:-1], 'float')
+        flat_input = np.asarray(row[3:-1], 'float32')
         
         output = self.outputLib.constructOutput(row[-1])
         
@@ -73,6 +74,7 @@ class BatchGenerator:
     construct a batch
     """    
     def _constructAsync(self):
+        t0 = time.time()
         file = open(self.file_path)
         itterator = islice(file, self.current_line, None)
         lines_read = 0
@@ -92,7 +94,7 @@ class BatchGenerator:
                 self.end_file = True
         file.close()
         if flat_inputs != []:
-            return np.asarray(flat_inputs,'float'), np.asarray(images,'float'), np.asarray(output_vecs,'float'), lines_read
+            return np.asarray(flat_inputs,'float32'), np.asarray(images,'float32'), np.asarray(output_vecs,'float32'), lines_read, time.time() - t0
         else:
             raise StopIteration()
             
