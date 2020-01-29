@@ -75,6 +75,17 @@ class GeneralBDDHandler:
         return image
     
     """
+    fill an image from a units_list
+    """
+    def fillImage(self, image, image_units_list, uint8 = False):
+        dtype = 'float32'
+        if uint8:
+            dtype = 'uint8'
+        for x,y,unit_type, stability in image_units_list:
+            u,v = generalIOLib.shiftTile(x,y)
+            image[u][v][unit_type] += convertStability(unit_type,stability, uint8) #+= is here to stack information units
+    
+    """
     return a set of images
     """
     def getImages(self, image_units_lists, uint8 = False):

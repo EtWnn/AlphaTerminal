@@ -106,7 +106,8 @@ class BatchGenerator:
         units_search = re.findall(unit_pattern, row[2])
         for x,y,unit_type, stability in units_search:
             units_list.append((int(x), int(y), int(unit_type), float(stability)))
-        images[index] = self.generalBDDHandler.getImage(units_list)
+            
+        self.generalBDDHandler.fillImage(images[index], units_list)
         
         flat_inputs[index] = np.asarray(row[3:-1], 'float32')
         
@@ -120,8 +121,8 @@ class BatchGenerator:
         self.lines_offsets = []
         with open(self.file_path) as file:
             for line in tqdm(file, desc = "lines offset reading"):
-                self.lines_offsets.append(offset+1)
-                offset += len(line)
+                self.lines_offsets.append(offset)
+                offset += len(line) + 1
         self.lines_offsets = tuple(self.lines_offsets)
 
     """
@@ -153,6 +154,7 @@ class BatchGenerator:
             line = file.readline()
             samples = re.findall(self.line_pattern, line)
             self.convertSample2(samples[0], i, flat_inputs, images, output_vecs)
+                
             # flat_input, image, output_vec = self.convertSample(samples[0])
             # flat_inputs.append(flat_input)
             # images.append(image)
