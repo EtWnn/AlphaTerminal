@@ -87,10 +87,11 @@ class GeneralIOMaker:
     compute the general IO for a list of tuple (match_id, flip)
     """
     def compute(self, to_compute):
+        print('getting already computed matches...')
         bddHandler = GeneralBDDHandler()
         already_computed = bddHandler.getAlreadyComputed()
-        computable = [m for m in to_compute if not(m in already_computed)]
-        for match_id, flip in tqdm(computable):
+        computable = filter(lambda x:x in already_computed, to_compute)
+        for match_id, flip in tqdm(to_compute):
             match_frames = getMatchFrames(match_id, flip)
             image_units_list, flat_inputs, outputs = self.getIOs(match_frames)
             bddHandler.addRows(match_id, flip, image_units_list, flat_inputs, outputs)
@@ -101,18 +102,22 @@ compute the general IO for a list of matches, if no ids is given, takes all of t
 Only compute the winner side!
 """
 def computeWinner(algo_ids = []):    
+    print('connecting to the database...')
     db = Database()
     gbdd = GeneralBDDHandler()
+    print('getting existing replays...')
     existing_replays = getDownloadedMatchIds()
-    already_computed = gbdd.getAlreadyComputed()
     
     matches = []
     if(algo_ids != []):
+        print('requesting matches by algo ids...')
         for algo_id in algo_ids:
             matches += db.matches.find_for_algo(algo_id)
     else:
+        print('requesting all matches in the database...')
         matches = db.matches.find_all()
-        
+    
+    print('filtering matches to be computed...')
     matches = filter(lambda x:x.id in existing_replays, matches)
     
     to_compute = []

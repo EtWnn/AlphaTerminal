@@ -5,6 +5,7 @@ Created on Mon Jan 20 12:40:30 2020
 
 @author: etiennew
 """
+import pandas as pd
 from multiprocessing import Pool
 from itertools import islice
 import time
@@ -20,19 +21,45 @@ from generalIOLib import GeneralOutputLib
 
 class BatchGenerator:
     
-    def __init__(self, file_path, batch_size, train_split, random_seed = 42):
+    def __init__(self, file_path, batch_size, test_split, validation_split, random_seed = 42):
         np.random.seed(random_seed)
         self.generalBDDHandler = GeneralBDDHandler()
         self.outputLib = GeneralOutputLib()
         self.file_path = file_path
         self.end_file = True
         self.batch_size = batch_size
-        self.train_size = int(self.batch_size * train_split)
-        train_index = np.random.permutation(self.batch_size)[:self.train_size]
-        self.is_train = [(i in train_index) for i in range(batch_size)]
         self.line_pattern = r'(\d+);(False|True);\(((?:\(\d+, \d+, \d+, \d+\.*\d*\),? ?)*)\);(\d+\.*\d*);(\d+\.*\d*);(\d+\.*\d*);(\d+\.*\d*);(\d+\.*\d*);(\d+\.*\d*);(\d+);((?:\d+_\d+_\d+)|stop)'
         
-    
+        self._constructOffsets()
+        self._initSetSeparation(test_split, validation_split)
+        
+        
+    """
+    itterator that yields the training batches, it prefetch the next batch with thread system
+    """
+    def getTrainBatches(self, batch_size, shuffle = True):
+        if shuffle:
+            self.train_index = np.random.permutation(self.train_index)
+        n_train_samples = len(self.train_index)
+        
+        start_index = 0
+        end_index = min(n_train_samples, start_index + batch_size)
+        
+        pool = Pool(processes=1)  
+        async_results = pool.apply_async(self._constructAsync2, args = (self.train_index[start_index:end_index],))
+        
+        while start_index < n_train_samples:
+            flat_inputs, images, output_vecs, time_spent = async_results.get()
+            infos = {'loading_time': time_spent, 'n_features': end_index - start_index}
+            start_index = end_index
+            end_index = min(n_train_samples, start_index + batch_size)
+            if start_index < n_train_samples:
+                async_results = pool.apply_async(self._constructAsync2, args = (self.train_index[start_index:end_index],))
+            yield ((flat_inputs, images), output_vecs), infos
+        
+        pool.close()
+        
+        
     """
     itterator that yields batches, it prefetch the next batch with thread system
     """
@@ -71,6 +98,68 @@ class BatchGenerator:
         return (flat_input, image, output)
     
     """
+    convert a row (tuple of strings) into flat_inputs, image, output vector
+    """
+    def convertSample2(self, row, index, flat_inputs, images, output_vecs):
+        unit_pattern = r"\((\d+), (\d+), (\d+), (\d+\.*\d*)\)"
+        units_list = []
+        units_search = re.findall(unit_pattern, row[2])
+        for x,y,unit_type, stability in units_search:
+            units_list.append((int(x), int(y), int(unit_type), float(stability)))
+        images[index] = self.generalBDDHandler.getImage(units_list)
+        
+        flat_inputs[index] = np.asarray(row[3:-1], 'float32')
+        
+        output_vecs[index] = self.outputLib.constructOutput(row[-1])
+    
+    """
+    contruct the list of the lines' offsets to read the file faster
+    """
+    def _constructOffsets(self):
+        offset = 0
+        self.lines_offsets = []
+        with open(self.file_path) as file:
+            for line in tqdm(file, desc = "lines offset reading"):
+                self.lines_offsets.append(offset+1)
+                offset += len(line)
+        self.lines_offsets = tuple(self.lines_offsets)
+
+    """
+    initialise the random train/validation/test separations
+    """    
+    def _initSetSeparation(self, test_split, validation_split):
+        self.n_samples = len(self.lines_offsets)-1
+        random_permutation = np.random.permutation(self.n_samples)
+        n_test_index = int(test_split * self.n_samples)
+        n_validation_index = int(validation_split * (self.n_samples - n_test_index))
+        n_train_index = self.n_samples - n_validation_index - n_test_index
+        self.train_index = random_permutation[:n_train_index]
+        self.validation_index = random_permutation[n_train_index : n_train_index + n_validation_index]
+        self.test_index = random_permutation[n_train_index + n_validation_index: n_train_index + n_validation_index + n_test_index]
+        
+    """
+    construct a batch
+    """    
+    def _constructAsync2(self, lines_index):
+        t0 = time.time()
+        file = open(self.file_path, 'r')
+        lines_index.sort()
+        n_lines = len(lines_index)
+        flat_inputs = np.zeros((n_lines, 7), dtype = 'float32')
+        images = np.zeros((n_lines, 15, 29, 7 ), dtype = 'float32')
+        output_vecs = np.zeros((n_lines, 925), dtype = 'float32')
+        for i, index in enumerate(lines_index):
+            file.seek(self.lines_offsets[index+1]) #+1 because of the headers' row
+            line = file.readline()
+            samples = re.findall(self.line_pattern, line)
+            self.convertSample2(samples[0], i, flat_inputs, images, output_vecs)
+            # flat_input, image, output_vec = self.convertSample(samples[0])
+            # flat_inputs.append(flat_input)
+            # images.append(image)
+            # output_vecs.append(output_vec)
+        return flat_inputs, images, output_vecs, time.time() - t0
+    
+    """
     construct a batch
     """    
     def _constructAsync(self):
@@ -97,9 +186,5 @@ class BatchGenerator:
             return np.asarray(flat_inputs,'float32'), np.asarray(images,'float32'), np.asarray(output_vecs,'float32'), lines_read, time.time() - t0
         else:
             raise StopIteration()
-            
-# if __name__ == '__main__':
-#     batch_generator = BatchGenerator('datasets/generalIO_v2.csv',1024,1,42)
-#     for b in batch_generator.getBatches():
-#         print('got one')
-#         break
+    
+
