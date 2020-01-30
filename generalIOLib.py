@@ -120,6 +120,14 @@ class GeneralOutputLib:
         output_vec[output_index] = 1
         return output_vec
     
+    """
+    given a string output,fill the one hot-encoding vector corresponding
+    """
+    def fillOutput(self, output_vec, output_name):
+        output_index = self.dic[output_name]
+        output_vec[output_index] = 1
+        return output_vec
+    
     
 def outputFormat(spawn):
     return "{}_{}_{}".format(spawn[0],spawn[1], spawn[2]) # "x_y_unit_type"

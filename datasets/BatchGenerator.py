@@ -111,7 +111,7 @@ class BatchGenerator:
         
         flat_inputs[index] = np.asarray(row[3:-1], 'float32')
         
-        output_vecs[index] = self.outputLib.constructOutput(row[-1])
+        self.outputLib.fillOutput(output_vecs[index], row[-1])
     
     """
     contruct the list of the lines' offsets to read the file faster

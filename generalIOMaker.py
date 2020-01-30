@@ -90,8 +90,8 @@ class GeneralIOMaker:
         print('getting already computed matches...')
         bddHandler = GeneralBDDHandler()
         already_computed = bddHandler.getAlreadyComputed()
-        computable = filter(lambda x:x in already_computed, to_compute)
-        for match_id, flip in tqdm(to_compute):
+        computable = list(filter(lambda x:not(x in already_computed), to_compute))
+        for match_id, flip in tqdm(computable):
             match_frames = getMatchFrames(match_id, flip)
             image_units_list, flat_inputs, outputs = self.getIOs(match_frames)
             bddHandler.addRows(match_id, flip, image_units_list, flat_inputs, outputs)
@@ -117,7 +117,7 @@ def computeWinner(algo_ids = []):
         print('requesting all matches in the database...')
         matches = db.matches.find_all()
     
-    print('filtering matches to be computed...')
+    print('filtering existing matches to be computed...')
     matches = filter(lambda x:x.id in existing_replays, matches)
     
     to_compute = []
