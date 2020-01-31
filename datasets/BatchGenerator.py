@@ -12,6 +12,7 @@ import time
 import numpy as np
 import re
 from tqdm import tqdm
+import platform
 
 import sys
 sys.path.append('.')
@@ -57,6 +58,44 @@ class BatchGenerator:
                 async_results = pool.apply_async(self._constructAsync2, args = (self.train_index[start_index:end_index],))
             yield ((flat_inputs, images), output_vecs), infos
         
+        pool.close()
+        
+    """
+    itterator that yields the training batches, it prefetch the next batch with thread system
+    """
+    def getTrainBatches2(self, batch_size, n_workers = 2, shuffle = True):
+        if shuffle:
+            self.train_index = np.random.permutation(self.train_index)
+        n_train_samples = len(self.train_index)
+        
+        start_index = 0
+        end_index = 0
+        
+        pool = Pool(processes=n_workers)  
+        async_results = n_workers * [None]
+        
+        next_result_index = 0
+        n_process_launched = 0
+        
+        for i in range(n_workers):
+            start_index = end_index
+            end_index = min(n_train_samples, start_index + batch_size)
+            if start_index < n_train_samples:
+                async_results[i] = pool.apply_async(self._constructAsync2, args = (self.train_index[start_index:end_index],))
+                n_process_launched += 1
+                
+        
+        while n_process_launched:
+            flat_inputs, images, output_vecs, time_spent = async_results[next_result_index].get()
+            n_process_launched -= 1
+            infos = {'loading_time': time_spent, 'n_features': end_index - start_index}
+            start_index = end_index
+            end_index = min(n_train_samples, start_index + batch_size)
+            if start_index < n_train_samples:
+                async_results[next_result_index] = pool.apply_async(self._constructAsync2, args = (self.train_index[start_index:end_index],))
+                n_process_launched += 1
+            next_result_index = (next_result_index + 1) % n_workers
+            yield ((flat_inputs, images), output_vecs), infos
         pool.close()
         
         
@@ -121,8 +160,14 @@ class BatchGenerator:
         self.lines_offsets = []
         with open(self.file_path) as file:
             for line in tqdm(file, desc = "lines offset reading"):
-                self.lines_offsets.append(offset)
-                offset += len(line) + 1
+                if platform.system() == 'Windows':
+                    self.lines_offsets.append(offset)
+                    offset += len(line) + 1
+                elif platform.system() == 'Linux':
+                    self.lines_offsets.append(offset+1)
+                    offset += len(line)
+                else:
+                    raise ValueError(f"unknown system {platform.system()}")
         self.lines_offsets = tuple(self.lines_offsets)
 
     """
@@ -153,7 +198,11 @@ class BatchGenerator:
             file.seek(self.lines_offsets[index+1]) #+1 because of the headers' row
             line = file.readline()
             samples = re.findall(self.line_pattern, line)
-            self.convertSample2(samples[0], i, flat_inputs, images, output_vecs)
+            try:
+                self.convertSample2(samples[0], i, flat_inputs, images, output_vecs)
+            except Exception as e:
+                print(f"error :{e}, line:{line}, index:{index}, offset:{self.lines_offsets[index+1]}")
+                raise e
                 
             # flat_input, image, output_vec = self.convertSample(samples[0])
             # flat_inputs.append(flat_input)
