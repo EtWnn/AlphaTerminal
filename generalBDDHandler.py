@@ -13,9 +13,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pathlib
+from tqdm import tqdm
 
 import generalIOLib
 from utils.config import getTiles, CONFIG
+
+def removeAlreadyComputed():
+    generalBDDHandler = GeneralBDDHandler()
+    already_computed = [a[0] for a in generalBDDHandler.getAlreadyComputed()]
+    for match_id in tqdm(already_computed):
+        file = rf'raw_replays/{match_id}.replay'
+        if os.path.exists(file):
+            os.remove(file)
 
 """
 return the remaning stability of a unit on a 255 scale (so it can be stored as uint8)
