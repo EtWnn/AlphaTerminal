@@ -39,7 +39,7 @@ def getAlgoIdLeaderBoard(start_page = 1,end_page = 2):
             for a in algos:
                 algo_ids.append({k:a[k] for k in ['id','rating','name','user']})
         else:
-            tqdm.write('connection error',r.status_code,'for page',i)
+            tqdm.write(f'connection error {r.status_code } for page {i}')
     return algo_ids
 
 
@@ -55,7 +55,7 @@ def getLastMatches(algo_id):
         content = json.loads(r.content)
         return content['data']['matches']
     else:
-        tqdm.write('connection error',r.status_code,'for algo',algo_id, 'url', url)
+        tqdm.write(f'connection error {r.status_code} for algo {algo_id} url {url}')
 
 
 """
@@ -81,6 +81,6 @@ def getMatchContent(match_id):
         content = r.content
         return content
     except Exception as e:
-        tqdm.write("\nerror trying to download match",match_id,":",e)
+        tqdm.write(f"\nerror trying to download match {match_id}: {e}")
     return None
 
