@@ -149,3 +149,4 @@ class GeneralBDDHandler:
         ax1.legend()
         
         plt.show()
+

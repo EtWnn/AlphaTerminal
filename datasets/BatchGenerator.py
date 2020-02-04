@@ -98,6 +98,13 @@ class BatchGenerator:
             yield ((flat_inputs, images), output_vecs), infos
         pool.close()
         
+    def getRandomValidation(self, batch_size):
+        batch_size = min(batch_size, len(self.validation_index))
+        index_sample = np.random.permutation(self.validation_index)[:batch_size]
+        flat_inputs, images, output_vecs, time_spent = self._constructAsync2(index_sample)
+        infos = {'loading_time': time_spent, 'n_features': batch_size}
+        return ((flat_inputs, images), output_vecs), infos
+        
         
     """
     itterator that yields batches, it prefetch the next batch with thread system
