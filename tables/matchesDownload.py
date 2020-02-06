@@ -13,9 +13,14 @@ import json
 from tqdm import tqdm
 import threading
 
-from database import Database
-import tablesManager
-import terminalAPI
+try:
+    from .database import Database
+    from .tablesManager import REPLAYSPATH
+    from .terminalAPI import getMatchContent
+except ImportError:
+    from database import Database
+    from tablesManager import REPLAYSPATH
+    from terminalAPI import getMatchContent
 
 """
 translate a raw replay (string) into a json-readable format
@@ -49,7 +54,7 @@ check if the folder for the raw replays exist, if not create it
 """
 def checkReplayRepo():
     try:
-        os.mkdir(tablesManager.REPLAYSPATH)
+        os.mkdir(REPLAYSPATH)
     except:
         pass
     
@@ -58,7 +63,7 @@ See already downloaded matches
 """
 def checkForExistingReplays():
     result = []
-    for f in os.listdir(tablesManager.REPLAYSPATH):
+    for f in os.listdir(REPLAYSPATH):
         if f[0] != '.':
             result.append(int(f.split('.')[0]))
     return result
@@ -67,7 +72,7 @@ def checkForExistingReplays():
 Downloads a specific match, and add it to the matches table
 """
 def handleMatch(match, db, semaphore=None, pbar=None):
-    match_content_b = terminalAPI.getMatchContent(match.id)
+    match_content_b = getMatchContent(match.id)
     has_crashed = True
     try:
         if match_content_b:
@@ -78,7 +83,7 @@ def handleMatch(match, db, semaphore=None, pbar=None):
                 match.winner_side = int(frames[-1]['endStats']['winner'])
                 db.matches.update_match(match)
                 if not(has_crashed):
-                    f = open(f"{tablesManager.REPLAYSPATH}/{match.id}.replay", 'wb')
+                    f = open(f"{REPLAYSPATH}/{match.id}.replay", 'wb')
                     f.write(match_content_b)
                     f.close()
     except Exception as e:
@@ -114,18 +119,20 @@ def downloadMatchesSelection(matches=None, db=None):
     if('y' in answer.lower()):
         semaphore = threading.Semaphore(value=20)
         pbar = tqdm(desc="Downloading...", total=len(matches_to_download), leave=False)
-        for match in matches_to_download:
+        for idx, match in enumerate(matches_to_download):
             semaphore.acquire()
             t = threading.Thread(
                 target=handleMatch,
                 args=(match, db, semaphore, pbar)
             )
             t.start()
+            if idx == len(matches_to_download)-1:
+                t.join()
 
 """
-Download only the matches of the user Felix (F.Richter)
+Download matches for given algos or users (default is Felix Richter)
 """
-def downloadEagle(algos=None, users=["F.Richter", "Felix"]):
+def downloadMatches(algos=None, users=["F.Richter", "Felix"]):
     db = Database()
     matches = []
     if not algos:
@@ -141,4 +148,4 @@ def downloadEagle(algos=None, users=["F.Richter", "Felix"]):
     downloadMatchesSelection(matches, db) 
 
 if __name__ == '__main__':
-    downloadEagle([101522, 100750, 100630, 100616, 100768, 100633])
+    downloadMatches([100591, 98313, 98148, 98310, 98150, 98285, 100618, 98259, 98300, 100313])

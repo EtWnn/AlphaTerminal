@@ -30,41 +30,6 @@ def getMatchesTable():
     default = pd.DataFrame(columns = ['id','winner_id','loser_id','winner_side','download_status','has_crashed']).set_index('id')
     return getTableFromPath(MATCHETABLEPATH, default)
 
-"""
-setters for the three tables
-"""
-def setUsersTable(user_table):
-    user_table.to_pickle(pathlib.Path(__file__).parent / USERTABLEPATH)
-
-def setAlgosTable(algos_table):
-    algos_table.to_pickle(pathlib.Path(__file__).parent / ALGOTABLEPATH)
-        
-def setMatchesTable(matches_table):
-    matches_table.to_pickle(pathlib.Path(__file__).parent / MATCHETABLEPATH)
-
-"""
-return the ids of the algos of a user_id
-"""
-def getAlgosId(user):
-    users_table = getUsersTable()
-    return users_table.at[user,'algos_list']
-
-"""
-return the ids of the matches of a user
-"""
-def getMatchId(user = None, algo = None):
-    users_table = getUsersTable()
-    algos_table = getAlgosTable()
-    
-    algos_list = [algo]
-    if(user):
-        algos_list = users_table.at[user,'algos_list']
-        
-    matches_list = []
-    for algo_id in algos_list:
-        matches_list = matches_list + algos_table.at[algo_id,'matches_list']
-    return matches_list
-
 
 if __name__ == "__main__":
     db = Database()
@@ -132,6 +97,4 @@ if __name__ == "__main__":
     db.matches.insert_many(matches_to_add)
 
     tqdm.write("Done !")
-
-
 

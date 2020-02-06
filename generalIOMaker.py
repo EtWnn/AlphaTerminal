@@ -166,4 +166,4 @@ def computeEagle(algo_ids = []):
     generalIOMaker.compute(to_compute)
 
 if __name__ == '__main__':
-    computeWinner([101522])
+    computeWinner([100591, 98313, 98148, 98310, 98150, 98285, 100618, 98259, 98300, 100313])
