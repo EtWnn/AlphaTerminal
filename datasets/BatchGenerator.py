@@ -138,6 +138,8 @@ class BatchGenerator:
         image = self.generalBDDHandler.getImage(units_list)
         
         flat_input = np.asarray(row[3:-1], 'float32')
+        flat_input_dividers = np.array([30,50,30,30,50,30,100])
+        flat_input = flat_input / flat_input_dividers
         
         output = self.outputLib.constructOutput(row[-1])
         
@@ -155,7 +157,9 @@ class BatchGenerator:
             
         self.generalBDDHandler.fillImage(images[index], units_list)
         
-        flat_inputs[index] = np.asarray(row[3:-1], 'float32')
+        flat_input = np.asarray(row[3:-1], 'float32')
+        flat_input_dividers = np.array([30,50,30,30,50,30,100])
+        flat_input = flat_input / flat_input_dividers
         
         self.outputLib.fillOutput(output_vecs[index], row[-1])
     
