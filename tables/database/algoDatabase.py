@@ -96,9 +96,16 @@ class AlgoDatabase(object):
         algos_in_db = self.find_all_by_ids(algo_ids)
         algos_in_db_ids = list(map(lambda a: a.id, algos_in_db))
 
-        algos_to_add = [algo for algo in algos if algo[0] not in algos_in_db_ids]
-        algos_to_update = [algo for algo in algos if algo[0] in algos_in_db_ids]
-
+        algos_to_add = []
+        algos_to_update = []
+        seen_ids = set()
+        for algo in algos:
+            if algo[0] not in seen_ids:
+                seen_ids.add(algo[0])
+                if algo[0] not in algos_in_db_ids:
+                    algos_to_add.append(algo)
+                else:
+                    algos_to_update.append(algo)
 
         cur = self.db_connection.cursor()
         execute_values(
