@@ -214,11 +214,6 @@ class BatchGenerator:
             except Exception as e:
                 print(f"error :{e}, line:{line}, index:{index}, offset:{self.lines_offsets[index+1]}")
                 raise e
-                
-            # flat_input, image, output_vec = self.convertSample(samples[0])
-            # flat_inputs.append(flat_input)
-            # images.append(image)
-            # output_vecs.append(output_vec)
         return flat_inputs, images, output_vecs, time.time() - t0
     
     """
