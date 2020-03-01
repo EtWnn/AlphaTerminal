@@ -35,10 +35,11 @@ class ModelPlayer:
         self.generalBDDHandler = GeneralBDDHandler()
         self.player_tiles = list(filter(lambda x: x[1] < 14, getTiles()))
         self.player_spawns = list(filter( lambda x: (x[0] + x[1] == 13) or (x[0] - x[1] == 14), self.player_tiles))
+        self.flat_input_dividers = np.array([30,50,30,30,50,30,100])
         
     def updateIllegalActions(self, image, flat_inputs, predictions):
-        n_cores = flat_inputs[1]
-        n_bits = flat_inputs[2]
+        n_cores = flat_inputs[1] * self.flat_input_dividers[1]
+        n_bits = flat_inputs[2] * self.flat_input_dividers[2]
         
         
         #remove unaffordable firewalls:
@@ -83,28 +84,30 @@ class ModelPlayer:
                         pass
         
     
-    def  constructInputs(self, units_list, players_stats, num_turn):
+    def constructInputs(self, units_list, players_stats, num_turn):
         flat_inputs = np.array(players_stats[0][:3] + players_stats[1][:3] + [num_turn])
-        flat_input_dividers = np.array([30,50,30,30,50,30,100])
-        flat_inputs = flat_inputs / flat_input_dividers
+        flat_inputs = flat_inputs / self.flat_input_dividers
         image = self.generalBDDHandler.getImage(units_list)
         return image, flat_inputs
         
     def getNextAction(self, image, flat_inputs):
         predictions = self.model.predict((flat_inputs.reshape((1,7)), image.reshape((1,29,15,7))))[0]
+        L = [(p,self.outputLib.column_names[i]) for i,p in enumerate(predictions)]
+        L.sort(reverse=True)
+        print(L[:10])
         self.updateIllegalActions(image, flat_inputs, predictions)
         return np.argmax(predictions)
     
     def updateInputs(self, chosen_action, image, flat_inputs):
         x,y,unit_type = list(map(int, chosen_action.split('_')))
         if unit_type < 3:
-            flat_inputs[1] -= CONFIG['cost'][unit_type]
+            flat_inputs[1] -= CONFIG['cost'][unit_type] / self.flat_input_dividers[1]
         elif unit_type < 6:
-            flat_inputs[2] -= CONFIG['cost'][unit_type]
-            
+            flat_inputs[2] -= CONFIG['cost'][unit_type] / self.flat_input_dividers[2]
+        
+
         u,v = shiftTile(x,y)
         image[u][v][unit_type] += convertStability(unit_type,CONFIG['stabilities'][unit_type], False)
-            
     
     def getTurnActions(self, units_list, players_stats, num_turn):
         image,flat_inputs = model_player.constructInputs(units_list, players_stats, num_turn)
@@ -118,9 +121,9 @@ class ModelPlayer:
                 self.updateInputs(chosen_action, image, flat_inputs)
         return turn_actions
     
-players_stats = [[30,45,5],[30,45,5]]
+players_stats = [[30,50,5],[30,50,5]]
 units_list = []
-num_turn = 0
+num_turn = 1
 model_player = ModelPlayer('model_2_7649','models')
 turn_actions = model_player.getTurnActions(units_list, players_stats, num_turn)
 print(turn_actions)
