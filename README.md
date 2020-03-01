@@ -22,14 +22,20 @@ Once this is done, open the file `tables/terminalAPI.py` and run it. It will cre
 To download the match replays, you will need a `.env` file in the `tables` folder, containing the credentials to the database. Owner of the repo should provide these.
 Then, go to the `tables` folder in a terminal, and run `python matchesDownload.py`. This will download all matches available in the database. 
 
-> Disclaimer: the database is quite big. Downloading all replays took us nearly 24h.
+> Disclaimer: the database is quite big. Downloading all replays took us nearly 24h (more than 190 Go).
+
+#### c. database making
+
+Now that the matches are downloaded, we can extract the data that we are interested in. This is done in the script `generalIOMaker.py`. It will be stored in the file `datasets/generalIO_v2.csv`. 
+
+> Disclaimer: same disclaimer as above. Constructing the database took us about 16hours. More than 21 millions samples (about 30 Go) were created.
 
 
 ### 2. Database construction
 
 ### a. Inputs details
 
-The format of input chosen is a mixed input. The first is a 3D matrix representing the board. The first two dimensions are for the position, the third for the type of a unit. As the board is in a diamond shape, it has been shifted and transform to end as a rectangle which is easier/lighter to interpret by a model. The final shape is (15,29,7).
+The input format chosen is a mixed input. The first is a 3D matrix representing the board. The first two dimensions are for the position, the third for the type of a unit. As the board is in a diamond shape, it has been shifted and transform to end as a rectangle which is easier/lighter to interpret by a model. The final shape is (15,29,7).
 The second part of the input is flat: it correspond to 7 usefull metrics: `[p1_health, p1_cores, p1_bits, p2_health, p2_cores, p2_bits, turn_number]`
 
 So our model will be a mixed CNN and FC NN. 
