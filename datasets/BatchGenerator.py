@@ -20,7 +20,6 @@ sys.path.append('.')
 from generalBDDHandler import GeneralBDDHandler
 from generalIOLib import GeneralOutputLib
 
-s
 class BatchGenerator:
     
     def __init__(self, file_path, batch_size, test_split, validation_split, random_seed = 42):
@@ -98,7 +97,79 @@ class BatchGenerator:
             next_result_index = (next_result_index + 1) % n_workers
             yield ((flat_inputs, images), output_vecs), infos
         pool.close()
+
+    """
+    itterator that yields the validation batches, it prefetch the next batch with thread system
+    """
+    def getValidationBatches(self, batch_size, n_workers = 2):
+        n_validation_samples = len(self.validation_index)
         
+        start_index = 0
+        end_index = 0
+        
+        pool = Pool(processes=n_workers)  
+        async_results = n_workers * [None]
+        
+        next_result_index = 0
+        n_process_launched = 0
+        
+        for i in range(n_workers):
+            start_index = end_index
+            end_index = min(n_validation_samples, start_index + batch_size)
+            if start_index < n_validation_samples:
+                async_results[i] = pool.apply_async(self._constructAsync2, args = (self.validation_index[start_index:end_index],))
+                n_process_launched += 1
+                
+        
+        while n_process_launched:
+            flat_inputs, images, output_vecs, time_spent = async_results[next_result_index].get()
+            n_process_launched -= 1
+            infos = {'loading_time': time_spent, 'n_features': end_index - start_index}
+            start_index = end_index
+            end_index = min(n_validation_samples, start_index + batch_size)
+            if start_index < n_validation_samples:
+                async_results[next_result_index] = pool.apply_async(self._constructAsync2, args = (self.validation_index[start_index:end_index],))
+                n_process_launched += 1
+            next_result_index = (next_result_index + 1) % n_workers
+            yield ((flat_inputs, images), output_vecs), infos
+        pool.close()
+        
+    """
+    itterator that yields the testing batches, it prefetch the next batch with thread system
+    """
+    def getTestBatches(self, batch_size, n_workers = 2):
+        n_test_samples = len(self.test_index)
+        
+        start_index = 0
+        end_index = 0
+        
+        pool = Pool(processes=n_workers)  
+        async_results = n_workers * [None]
+        
+        next_result_index = 0
+        n_process_launched = 0
+        
+        for i in range(n_workers):
+            start_index = end_index
+            end_index = min(n_test_samples, start_index + batch_size)
+            if start_index < n_test_samples:
+                async_results[i] = pool.apply_async(self._constructAsync2, args = (self.test_index[start_index:end_index],))
+                n_process_launched += 1
+                
+        
+        while n_process_launched:
+            flat_inputs, images, output_vecs, time_spent = async_results[next_result_index].get()
+            n_process_launched -= 1
+            infos = {'loading_time': time_spent, 'n_features': end_index - start_index}
+            start_index = end_index
+            end_index = min(n_test_samples, start_index + batch_size)
+            if start_index < n_test_samples:
+                async_results[next_result_index] = pool.apply_async(self._constructAsync2, args = (self.test_index[start_index:end_index],))
+                n_process_launched += 1
+            next_result_index = (next_result_index + 1) % n_workers
+            yield ((flat_inputs, images), output_vecs), infos
+        pool.close()
+
     def getRandomValidation(self, batch_size):
         batch_size = min(batch_size, len(self.validation_index))
         index_sample = np.random.permutation(self.validation_index)[:batch_size]
