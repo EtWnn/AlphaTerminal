@@ -22,7 +22,7 @@ Once this is done, open the file `tables/terminalAPI.py` and run it. It will cre
 To download the match replays, you will need a `.env` file in the `tables` folder, containing the credentials to the database. Owner of the repo should provide these.
 Then, go to the `tables` folder in a terminal, and run `python matchesDownload.py`. This will download all matches available in the database. 
 
-> Note: Disclaimer, the database is quite big. Downloading all replays took us nearly 24h.
+> Disclaimer: the database is quite big. Downloading all replays took us nearly 24h.
 
 
 ### 2. Database construction
