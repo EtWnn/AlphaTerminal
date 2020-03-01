@@ -10,13 +10,12 @@ This script search in every downloaded replays the locations used by the eagle a
 
 import json
 from tqdm import tqdm
-import numpy as np
 
 from utils.flip_replay import flip_content
 from utils.config import getTiles
 from utils.replay_reading import getDownloadedMatchIds
 from tables.database import Database
-from tables.matchesDownload import checkForExistingReplays
+
 import matplotlib.pyplot as plt
 import pickle
 

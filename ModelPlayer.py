@@ -5,7 +5,6 @@ Created on Tue Feb  4 13:51:41 2020
 @author: Shadow
 """
 
-import tensorflow as tf
 from tensorflow.keras.models import model_from_json
 from tensorflow.keras.optimizers import Adam
 import numpy as np
@@ -15,7 +14,7 @@ from generalIOLib import FlatInputDic, GeneralOutputLib, getTiles, shiftTile
 from generalBDDHandler import GeneralBDDHandler, convertStability
 
 """
-play that will play according to a model
+Player that will play according to a model
 """
 class ModelPlayer:
     def __init__(self, model_name, directory):
@@ -42,21 +41,21 @@ class ModelPlayer:
         n_bits = flat_inputs[2] * self.flat_input_dividers[2]
         
         
-        #remove unaffordable firewalls:
+        # remove unaffordable firewalls:
         for unit_type in range(3):
             if(n_cores < CONFIG['cost'][unit_type]):
                 for x,y in self.player_tiles:
                     action_num = self.outputLib.dic["{}_{}_{}".format(x,y,unit_type)]
                     predictions[action_num] = -np.inf
                     
-        #remove unaffordable informations
+        # remove unaffordable informations
         for unit_type in range(3,6):
             if(n_bits < CONFIG['cost'][unit_type]):
                 for x,y in self.player_spawns:
                     action_num = self.outputLib.dic["{}_{}_{}".format(x,y,unit_type)]
                     predictions[action_num] = -np.inf
                 
-       #remove empty removals or already occupied spawns
+       # remove empty removals or already occupied spawns
         for x,y in self.player_tiles:
             u,v = shiftTile(x, y)
             already_removed = image[u][v][6]> 0

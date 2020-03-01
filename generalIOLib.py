@@ -7,7 +7,6 @@ Created on Tue Dec 24 14:46:30 2019
 """
 
 import numpy as np
-from utils.config import CONFIG
 
 """
 Retourne les cases utilisables du plateau

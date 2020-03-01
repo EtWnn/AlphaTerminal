@@ -8,9 +8,7 @@ this files handles the three tables that are used to store data about terminal u
 @author: etiennew
 """
 
-import pandas as pd
 import datetime
-import pathlib
 import argparse
 from tqdm import tqdm
 

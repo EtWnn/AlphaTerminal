@@ -6,12 +6,10 @@ Created on Wed Dec 25 15:44:01 2019
 @author: etiennew
 """
 
-import re
 import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 import pathlib
 from tqdm import tqdm
 
