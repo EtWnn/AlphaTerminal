@@ -13,9 +13,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pathlib
+from tqdm import tqdm
 
 import generalIOLib
 from utils.config import getTiles, CONFIG
+
+def removeAlreadyComputed():
+    generalBDDHandler = GeneralBDDHandler()
+    already_computed = [a[0] for a in generalBDDHandler.getAlreadyComputed()]
+    for match_id in tqdm(already_computed):
+        file = rf'raw_replays/{match_id}.replay'
+        if os.path.exists(file):
+            os.remove(file)
 
 """
 return the remaning stability of a unit on a 255 scale (so it can be stored as uint8)
@@ -60,28 +69,41 @@ class GeneralBDDHandler:
                 row = [match_id, flipped, str(units_list)] + flat_inputs + [output]
                 row = ";".join(map(str,row)) + "\n"
                 f.write(row)
-                
-    """
-    convert the units_list from str to tuple of tuples  
-    """          
-    def convertUnitsList(self, units_list_str):
-        units_list = []
-        search = re.findall(r"\((\d+), (\d+), (\d+), (\d+\.*\d*)\)", units_list_str)
-        for x,y,unit_type, stability in search:
-            units_list.append((int(x), int(y), int(unit_type), float(stability)))
-        return tuple(units_list)
         
+    """
+    return an image from a units_list
+    """
+    def getImage(self, image_units_list, uint8 = False):
+        dtype = 'float32'
+        if uint8:
+            dtype = 'uint8'
+        image = np.zeros(generalIOLib.MatrixInput().shape, dtype = dtype)
+        for x,y,unit_type, stability in image_units_list:
+            u,v = generalIOLib.shiftTile(x,y)
+            image[u][v][unit_type] += convertStability(unit_type,stability, uint8) #+= is here to stack information units
+        return image
+    
+    """
+    fill an image from a units_list
+    """
+    def fillImage(self, image, image_units_list, uint8 = False):
+        dtype = 'float32'
+        if uint8:
+            dtype = 'uint8'
+        for x,y,unit_type, stability in image_units_list:
+            u,v = generalIOLib.shiftTile(x,y)
+            image[u][v][unit_type] += convertStability(unit_type,stability, uint8) #+= is here to stack information units
     
     """
     return a set of images
     """
-    def getImages(self, image_units_list, uint8 = False):
-        total_shape = [len(image_units_list)] + list(generalIOLib.MatrixInput().shape)
+    def getImages(self, image_units_lists, uint8 = False):
+        total_shape = [len(image_units_lists)] + list(generalIOLib.MatrixInput().shape)
         dtype = 'float32'
         if uint8:
             dtype = 'uint8'
         images = np.zeros(total_shape, dtype = dtype)
-        for i,image_units in enumerate(tqdm(image_units_list)):
+        for i,image_units in enumerate(tqdm(image_units_lists)):
             for x,y,unit_type, stability in image_units:
                 u,v = generalIOLib.shiftTile(x,y)
                 images[i][u][v][unit_type] += convertStability(unit_type,stability, uint8) #+= is here to stack information units
@@ -127,3 +149,4 @@ class GeneralBDDHandler:
         ax1.legend()
         
         plt.show()
+

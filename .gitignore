@@ -1,7 +1,9 @@
 # Data
+
 cnn_images/
 raw_replays/
-datasets/
+datasets/*.csv
+datasets/*.pkl
 
 # Credentials
 tables/credentials

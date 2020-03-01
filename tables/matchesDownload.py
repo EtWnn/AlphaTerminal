@@ -148,4 +148,6 @@ def downloadMatches(algos=None, users=["F.Richter", "Felix"]):
     downloadMatchesSelection(matches, db) 
 
 if __name__ == '__main__':
-    downloadMatches([100591, 98313, 98148, 98310, 98150, 98285, 100618, 98259, 98300, 100313])
+	db = Database()
+	downloadMatchesSelection(db=db)
+    #downloadEagle([101522, 100750, 100630, 100616, 100768, 100633])
