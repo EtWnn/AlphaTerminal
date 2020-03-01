@@ -8,10 +8,9 @@ this scripts allows to download matches
 @author: etiennew
 """
 import os
-import numpy as np
 import json
-from tqdm import tqdm
 import threading
+from tqdm import tqdm
 
 try:
     from .database import Database

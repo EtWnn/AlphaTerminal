@@ -6,7 +6,6 @@ Created on Tue Dec 24 14:50:56 2019
 @author: etiennew
 """
 
-import numpy as np
 from tqdm import tqdm
 
 import generalIOLib

@@ -5,13 +5,13 @@ Created on Mon Jan 20 12:40:30 2020
 
 @author: etiennew
 """
-import pandas as pd
 from multiprocessing import Pool
 from itertools import islice
+from tqdm import tqdm
+
 import time
 import numpy as np
 import re
-from tqdm import tqdm
 import platform
 
 import sys
@@ -20,6 +20,7 @@ sys.path.append('.')
 from generalBDDHandler import GeneralBDDHandler
 from generalIOLib import GeneralOutputLib
 
+s
 class BatchGenerator:
     
     def __init__(self, file_path, batch_size, test_split, validation_split, random_seed = 42):
@@ -174,7 +175,7 @@ class BatchGenerator:
                 if platform.system() == 'Windows':
                     self.lines_offsets.append(offset)
                     offset += len(line) + 1
-                elif platform.system() == 'Linux':
+                elif platform.system() == 'Linux' or platform.system() == 'Darwin':
                     self.lines_offsets.append(offset+1)
                     offset += len(line)
                 else:
