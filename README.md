@@ -10,24 +10,19 @@ There are a lot of data files in this project so you will have to download/const
 
 ### 1. raw_replays downloading
 
-replays are the are the essential material for this project. One replay describes a match that has been played online. it is under the format '.replay' and will be stored in a dedicated folder 'raw_replays' at the root of this project. To be able to download replays there are several steps:
+Replays are the are the essential material for this project. One replay describes a match that has been played online. it is under the format '.replay' and will be stored in a dedicated folder 'raw_replays' at the root of this project. To be able to download replays there are several steps:
 
 #### a. account creation
 
 The first thing is to create an account on https://terminal.c1games.com. This will be needed to make requests to the Terminal API.
 Once this is done, open the file `tables/terminalAPI.py` and run it. It will create a file named 'credentials'. Fill it with the credentials of the account you just created.
 
-#### b. tables setup
+#### b. downloads
 
-The only data files that are stored by this project are three tables: `users_table`, `algos_table` and  `matches_tables`. Those are very useful to be able to download old matches. Indeed the Terminal API only allows you to access the 100 last matches of an algos. So those three tables are here to get past this limitation. They are all stored in the `tables/pkl` folder. \
-The function `updateTables` in `table/tablesManager.py` is here to update the records.
+To download the match replays, you will need a `.env` file in the `tables` folder, containing the credentials to the database. Owner of the repo should provide these.
+Then, go to the `tables` folder in a terminal, and run `python matchesDownload.py`. This will download all matches available in the database. 
 
-For your local needs, you will need to execute the function `resetMatchesBool` in `table/tablesManager.py`.
-
-#### c. downloads
-
-You can now download every matches you want from the `matches_table`. Bear in mind that each replay file weigths about 1.8Mo and there are more than 50k replay in the `matches_table` as of now (24/12/2019).
-The function `downloadEagle` in the file `tables/matchesDownload.py` will download every matches of the Eagle algos serie. Our first work will use this series.
+> Note: Disclaimer, the database is quite big. Downloading all replays took us nearly 24h.
 
 
 ### 2. Database construction
@@ -48,31 +43,12 @@ Specific output needs will rely on this format to create the output needed (regr
 
 ### c. Storage
 
-Every image (3D matrix representing the board) will be stored in the folder "cnn_images" at the root.
-A dataframe pickled as `datasets/generalIO.pkl` will store the image **path**, the image **name**, the **flat inputs** and the **general output**.
+A giant CSV file located at `datasets/generalIO_v2.csv` will store the fully pre-processed match replays. It will be read batch-wise while training.
 
-### d. Computation
+### 3. Batch generator
 
-The class `GeneralIOMaker` and its method `compute` are used to compute the inputs and general outputs of matches. This involve a lot of files to be created and will certainly overload your PC. So close every unnecessary thing and let your computer run (even if you get a non responding warning). About 250 files are created per match (about 850ko per match).
+Given the size of the training dataset (21 million samples, so about 28Go), we made a class to handle the loading and unloading of such data into memory batch-wise. This is the BatchGenerator. It uses multithreading to pre-load batches while the model is training on the previous batch. It also handles splitting the dataset into a train, validation, and test sub-set.
 
-It will also take some times so take a look.
+### 4. Model
 
-The function `computeEagle` is used to create only the eagle serie inputs/outputs. 
-For the first model, just run  `computeEagle([99748])` as this model will learn only from the algo number `99748`.
-
-> Warning: Make sure you have a `datasets` folder at the root of your project before running this.
-
-### e. Specific Output
-
-For the time being, the model specific outputs will be computed in the notebook where the model is trained (it is quite a cheap operation)
-
-### 3. Model
-
-### a. Choice
-
-I chosed the eagle algo with the most recorded matches (155): it's the algo id 99748.
-The output will be a one hot vector, and the range will be every possible move that eagle 99748 can do. (This information is taken from eagle_locs already computed, it is stored in `tables/pkl/eagle_locs.pkl`)
-
-### b. Notebook
-
-The notebook is 'single_eagle_training.ipynb'. Plenty of things can be done but that should give you a good preview.
+Training of the model is done in the notebook called `Global_Training.ipynb`.
